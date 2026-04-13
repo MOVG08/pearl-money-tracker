@@ -7,7 +7,7 @@ interface DataContextType {
   profiles: Profile[];
   addTransaction: (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
   addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
-  addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Profile;
   deleteTransaction: (id: string) => void;
   monthlyIncome: number;
   monthlyExpenses: number;
@@ -53,7 +53,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAccounts(prev => [...prev, newAcc]);
   };
 
-  const addProfile = (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const addProfile = (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Profile => {
     const now = new Date().toISOString();
     const newProfile: Profile = {
       ...profile,
