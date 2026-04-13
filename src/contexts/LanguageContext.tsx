@@ -19,6 +19,7 @@ const translations: Translations = {
   'nav.dashboard': { es: 'Inicio', en: 'Home' },
   'nav.transactions': { es: 'Movimientos', en: 'Transactions' },
   'nav.accounts': { es: 'Cuentas', en: 'Accounts' },
+  'nav.profiles': { es: 'Perfiles', en: 'Profiles' },
   'nav.settings': { es: 'Ajustes', en: 'Settings' },
   // Dashboard
   'dashboard.income': { es: 'Ingresos', en: 'Income' },

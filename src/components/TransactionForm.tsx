@@ -69,13 +69,13 @@ const TransactionForm: React.FC<Props> = ({ onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !category || !accountId || !profileId) return;
+    if (!amount || !category || !accountId) return;
     addTransaction({
       type,
       amount: parseFloat(amount),
       category,
       account_id: accountId,
-      profile_id: profileId,
+      profile_id: profileId || undefined,
       date,
       notes: notes || undefined,
     });
