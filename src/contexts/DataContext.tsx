@@ -9,6 +9,7 @@ interface DataContextType {
   addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
   addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Profile;
   deleteTransaction: (id: string) => void;
+  deleteProfile: (id: string) => void;
   monthlyIncome: number;
   monthlyExpenses: number;
   balance: number;
@@ -70,6 +71,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
+  const deleteProfile = (id: string) => {
+    setProfiles(prev => prev.filter(p => p.id !== id));
+  };
+
   // General balance: sum of all account initial balances + all income - all expenses
   const balance = useMemo(() => {
     const accountBalances = accounts.reduce((s, a) => s + a.balance, 0);
@@ -101,7 +106,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   return (
-    <DataContext.Provider value={{ transactions, accounts, profiles, addTransaction, addAccount, addProfile, deleteTransaction, monthlyIncome, monthlyExpenses, balance }}>
+    <DataContext.Provider value={{ transactions, accounts, profiles, addTransaction, addAccount, addProfile, deleteTransaction, deleteProfile, monthlyIncome, monthlyExpenses, balance }}>
       {children}
     </DataContext.Provider>
   );

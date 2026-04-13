@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Home, ArrowLeftRight, CreditCard, Settings } from 'lucide-react';
+import { Home, ArrowLeftRight, Users, CreditCard, Settings } from 'lucide-react';
 
 const BottomNav: React.FC = () => {
   const { t } = useLanguage();
@@ -11,6 +11,7 @@ const BottomNav: React.FC = () => {
   const tabs = [
     { path: '/', icon: Home, label: t('nav.dashboard') },
     { path: '/transactions', icon: ArrowLeftRight, label: t('nav.transactions') },
+    { path: '/profiles', icon: Users, label: t('nav.profiles') },
     { path: '/accounts', icon: CreditCard, label: t('nav.accounts') },
     { path: '/settings', icon: Settings, label: t('nav.settings') },
   ];
