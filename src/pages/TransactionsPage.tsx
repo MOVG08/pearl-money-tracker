@@ -11,7 +11,7 @@ const formatCurrency = (amount: number) =>
 
 const TransactionsPage: React.FC = () => {
   const { t } = useLanguage();
-  const { transactions, accounts, deleteTransaction } = useData();
+  const { transactions, accounts, profiles, deleteTransaction } = useData();
   const [showForm, setShowForm] = useState(false);
 
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
@@ -53,6 +53,7 @@ const TransactionsPage: React.FC = () => {
           {transactions.map((tx, i) => {
             const cat = allCategories.find(c => c.id === tx.category);
             const acc = accounts.find(a => a.id === tx.account_id);
+            const profile = profiles.find(p => p.id === tx.profile_id);
             return (
               <motion.div
                 key={tx.id}
@@ -67,6 +68,7 @@ const TransactionsPage: React.FC = () => {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
                     {acc && <span>• {acc.name}</span>}
+                    {profile && <span>• {profile.name}</span>}
                   </div>
                   {tx.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{tx.notes}</p>}
                 </div>

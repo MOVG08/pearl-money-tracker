@@ -12,7 +12,7 @@ const formatCurrency = (amount: number) => {
 
 const DashboardPage: React.FC = () => {
   const { t } = useLanguage();
-  const { monthlyIncome, monthlyExpenses, balance, transactions } = useData();
+  const { monthlyIncome, monthlyExpenses, balance, transactions, profiles } = useData();
 
   const now = new Date();
   const monthlyTx = transactions.filter(tx => {
@@ -104,6 +104,7 @@ const DashboardPage: React.FC = () => {
         ) : (
           recentTransactions.map((tx, i) => {
             const cat = allCategories.find(c => c.id === tx.category);
+            const profile = profiles.find(p => p.id === tx.profile_id);
             return (
               <motion.div
                 key={tx.id}
@@ -115,7 +116,10 @@ const DashboardPage: React.FC = () => {
                 <span className="text-xl">{cat?.icon || '💰'}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{cat?.name || tx.category}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(tx.date).toLocaleDateString('es-MX')}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
+                    {profile && <span>• {profile.name}</span>}
+                  </div>
                 </div>
                 <span className={`font-mono text-sm font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
                   {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}

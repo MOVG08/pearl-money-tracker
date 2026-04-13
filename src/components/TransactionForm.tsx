@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type TransactionType } from '@/types/database';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionType } from '@/types/database';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
+import { Search, Plus, X } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -12,16 +13,32 @@ interface Props {
 
 const TransactionForm: React.FC<Props> = ({ onClose }) => {
   const { t } = useLanguage();
-  const { addTransaction, accounts } = useData();
+  const { addTransaction, accounts, profiles, addProfile } = useData();
   const navigate = useNavigate();
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [accountId, setAccountId] = useState(accounts[0]?.id || '');
+  const [profileId, setProfileId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
 
+  // Profile search & quick create
+  const [profileSearch, setProfileSearch] = useState('');
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  const [newProfileType, setNewProfileType] = useState<'person' | 'business'>('person');
+
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+
+  const filteredProfiles = useMemo(() => {
+    if (!profileSearch) return profiles;
+    const q = profileSearch.toLowerCase();
+    return profiles.filter(p => p.name.toLowerCase().includes(q));
+  }, [profiles, profileSearch]);
+
+  const selectedProfile = profiles.find(p => p.id === profileId);
 
   if (accounts.length === 0) {
     return (
@@ -38,14 +55,27 @@ const TransactionForm: React.FC<Props> = ({ onClose }) => {
     );
   }
 
+  const handleQuickCreateProfile = () => {
+    if (!newProfileName.trim()) return;
+    const newProfile = addProfile({ name: newProfileName.trim(), type: newProfileType });
+    if (newProfile) {
+      setProfileId(newProfile.id);
+    }
+    setNewProfileName('');
+    setShowQuickCreate(false);
+    setShowProfileDropdown(false);
+    setProfileSearch('');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !category || !accountId) return;
+    if (!amount || !category || !accountId || !profileId) return;
     addTransaction({
       type,
       amount: parseFloat(amount),
       category,
       account_id: accountId,
+      profile_id: profileId,
       date,
       notes: notes || undefined,
     });
@@ -101,6 +131,92 @@ const TransactionForm: React.FC<Props> = ({ onClose }) => {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Profile selector */}
+      <div>
+        <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
+        {selectedProfile ? (
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
+            <span className="text-sm">{selectedProfile.type === 'person' ? '👤' : '🏢'}</span>
+            <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
+            <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t('profiles.search')}
+                value={profileSearch}
+                onChange={(e) => { setProfileSearch(e.target.value); setShowProfileDropdown(true); }}
+                onFocus={() => setShowProfileDropdown(true)}
+                className="h-11 pl-9 bg-secondary border-border/50 rounded-xl"
+              />
+            </div>
+            {showProfileDropdown && (
+              <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                {filteredProfiles.map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <span>{p.type === 'person' ? '👤' : '🏢'}</span>
+                    <span>{p.name}</span>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => { setShowQuickCreate(true); setShowProfileDropdown(false); setNewProfileName(profileSearch); }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-secondary transition-colors border-t border-border"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('profiles.quickCreate')}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Quick create inline form */}
+        {showQuickCreate && (
+          <div className="mt-2 bg-secondary rounded-xl p-3 space-y-3">
+            <Input
+              placeholder={t('profiles.name')}
+              value={newProfileName}
+              onChange={(e) => setNewProfileName(e.target.value)}
+              className="h-10 bg-background border-border/50 rounded-lg text-sm"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              {PROFILE_TYPES.map(pt => (
+                <button
+                  key={pt.value}
+                  type="button"
+                  onClick={() => setNewProfileType(pt.value)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-all ${
+                    newProfileType === pt.value ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
+                  }`}
+                >
+                  <span>{pt.icon}</span>
+                  <span>{t(pt.labelKey)}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowQuickCreate(false)} className="flex-1 py-2 rounded-lg text-xs text-muted-foreground bg-background">
+                {t('general.cancel')}
+              </button>
+              <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">
+                {t('profiles.save')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Category */}

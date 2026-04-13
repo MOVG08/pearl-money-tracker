@@ -66,7 +66,7 @@ const AccountsPage: React.FC = () => {
                   }`}
                 >
                   <span className="text-lg">{at.icon}</span>
-                  <span>{at.label}</span>
+                  <span>{t(at.labelKey)}</span>
                 </button>
               ))}
             </div>
@@ -107,7 +107,7 @@ const AccountsPage: React.FC = () => {
                 <span className="text-2xl">{at?.icon || '📁'}</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground">{acc.name}</p>
-                  <p className="text-xs text-muted-foreground">{at?.label || acc.type}</p>
+                  <p className="text-xs text-muted-foreground">{at ? t(at.labelKey) : acc.type}</p>
                 </div>
                 <span className="font-mono text-sm font-medium text-foreground">{formatCurrency(acc.balance)}</span>
               </motion.div>

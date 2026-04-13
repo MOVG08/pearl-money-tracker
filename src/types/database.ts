@@ -13,10 +13,20 @@ export interface Account {
   updated_at: string;
 }
 
+export interface Profile {
+  id: string;
+  user_id: string;
+  name: string;
+  type: 'person' | 'business';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Transaction {
   id: string;
   user_id: string;
   account_id: string;
+  profile_id: string;
   type: TransactionType;
   amount: number;
   category: string;
@@ -54,9 +64,14 @@ export const INCOME_CATEGORIES: Category[] = [
 ];
 
 export const ACCOUNT_TYPES = [
-  { value: 'cash' as const, label: 'Efectivo', icon: '💵' },
-  { value: 'bank' as const, label: 'Banco', icon: '🏦' },
-  { value: 'credit_card' as const, label: 'Tarjeta de crédito', icon: '💳' },
-  { value: 'savings' as const, label: 'Ahorros', icon: '🐷' },
-  { value: 'other' as const, label: 'Otro', icon: '📁' },
+  { value: 'cash' as const, labelKey: 'accountType.cash', icon: '💵' },
+  { value: 'bank' as const, labelKey: 'accountType.bank', icon: '🏦' },
+  { value: 'credit_card' as const, labelKey: 'accountType.credit_card', icon: '💳' },
+  { value: 'savings' as const, labelKey: 'accountType.savings', icon: '🐷' },
+  { value: 'other' as const, labelKey: 'accountType.other', icon: '📁' },
+];
+
+export const PROFILE_TYPES = [
+  { value: 'person' as const, labelKey: 'profileType.person', icon: '👤' },
+  { value: 'business' as const, labelKey: 'profileType.business', icon: '🏢' },
 ];

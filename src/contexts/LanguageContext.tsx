@@ -41,6 +41,7 @@ const translations: Translations = {
   'transactions.save': { es: 'Guardar', en: 'Save' },
   'transactions.noTransactions': { es: 'No hay movimientos aún', en: 'No transactions yet' },
   'transactions.addFirst': { es: 'Agrega tu primer movimiento', en: 'Add your first transaction' },
+  'transactions.profile': { es: 'Perfil', en: 'Profile' },
   // Accounts
   'accounts.title': { es: 'Cuentas', en: 'Accounts' },
   'accounts.add': { es: 'Nueva cuenta', en: 'New account' },
@@ -51,6 +52,26 @@ const translations: Translations = {
   'accounts.noAccounts': { es: 'No tienes cuentas', en: 'No accounts yet' },
   'accounts.createFirst': { es: 'Crea tu primera cuenta para empezar', en: 'Create your first account to get started' },
   'accounts.needAccount': { es: 'Necesitas crear una cuenta primero', en: 'You need to create an account first' },
+  // Account types
+  'accountType.cash': { es: 'Efectivo', en: 'Cash' },
+  'accountType.bank': { es: 'Banco', en: 'Bank' },
+  'accountType.credit_card': { es: 'Tarjeta de crédito', en: 'Credit card' },
+  'accountType.savings': { es: 'Ahorros', en: 'Savings' },
+  'accountType.other': { es: 'Otro', en: 'Other' },
+  // Profile types
+  'profileType.person': { es: 'Persona', en: 'Person' },
+  'profileType.business': { es: 'Empresa', en: 'Business' },
+  // Profiles
+  'profiles.title': { es: 'Perfiles', en: 'Profiles' },
+  'profiles.add': { es: 'Nuevo perfil', en: 'New profile' },
+  'profiles.name': { es: 'Nombre del perfil', en: 'Profile name' },
+  'profiles.type': { es: 'Tipo de perfil', en: 'Profile type' },
+  'profiles.save': { es: 'Crear perfil', en: 'Create profile' },
+  'profiles.noProfiles': { es: 'No tienes perfiles', en: 'No profiles yet' },
+  'profiles.createFirst': { es: 'Crea un perfil para registrar con quién transaccionas', en: 'Create a profile to track who you transact with' },
+  'profiles.needProfile': { es: 'Necesitas crear un perfil primero', en: 'You need to create a profile first' },
+  'profiles.search': { es: 'Buscar perfil...', en: 'Search profile...' },
+  'profiles.quickCreate': { es: 'Crear nuevo perfil', en: 'Create new profile' },
   // Settings
   'settings.title': { es: 'Ajustes', en: 'Settings' },
   'settings.language': { es: 'Idioma', en: 'Language' },
