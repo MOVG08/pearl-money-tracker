@@ -1,44 +1,36 @@
 
 
-## Plan: Profiles, Default Accounts, Translations, and General Balance
+## Plan: Fix transaction saving + Add Profiles as main section
 
-### 1. Fix account type translations
-- Add translation keys for account types to `LanguageContext.tsx`
-- Update `ACCOUNT_TYPES` in `database.ts` to use translation keys
-- Use `t()` in `AccountsPage.tsx` for labels
+### Problem
+1. Transactions can't be saved because `profileId` is required in the form validation (`if (!amount || !category || !accountId || !profileId) return;`), but users have no profiles yet and no dedicated place to manage them.
+2. Profiles section is not accessible from main navigation.
 
-### 2. Add default accounts on signup
-- In `DataContext.tsx`, initialize with two default accounts: "Efectivo" (cash, $0) and "Banco" (bank, $0)
+### Changes
 
-### 3. Show general balance in Dashboard overview
-- In `DataContext.tsx`, compute a single aggregated balance across all accounts (sum of all account balances adjusted by transactions)
-- Display this general balance in the existing balance card on `DashboardPage.tsx` — no per-account breakdown
+**1. Make `profile_id` optional in transactions**
+- In `src/types/database.ts`: make `profile_id` optional (`profile_id?: string`)
+- In `src/components/TransactionForm.tsx`: remove `!profileId` from the validation check so transactions can be saved without a profile
 
-### 4. Add Profile (counterparty) data model
-- Add `Profile` interface to `database.ts`: `{ id, user_id, name, type: 'person' | 'business', created_at, updated_at }`
-- Add `profile_id` field to `Transaction` interface
+**2. Create `src/pages/ProfilesPage.tsx`**
+- List all profiles with name and type (person/business)
+- Button to add new profile (name + type selector)
+- Delete profile option
+- Clean card-based layout matching existing pages
 
-### 5. Add profile management to DataContext
-- Add `profiles` state, `addProfile` function, expose in context
+**3. Add Profiles to main navigation**
+- In `src/components/BottomNav.tsx`: add a Profiles tab (Users icon) between Transactions and Accounts
+- In `src/App.tsx`: add route `/profiles` → `ProfilesPage`
+- Add translation keys `nav.profiles` in `src/contexts/LanguageContext.tsx`
 
-### 6. Update Transaction form
-- Add profile selector with search/filter dropdown
-- Inline "quick create profile" option
-- If no profiles exist, show prompt to create one
-- Include `profile_id` in transaction submission
-
-### 7. Update transaction display
-- Show profile name on transaction cards in `TransactionsPage.tsx` and `DashboardPage.tsx`
-
-### 8. Add all new translation keys
-- Profile-related strings in both Spanish and English
+**4. Add translations**
+- Add missing profile-related keys: `profiles.title`, `profiles.add`, `profiles.empty`, `profiles.delete`, etc.
 
 ### Files to modify
+- `src/types/database.ts` — make profile_id optional
+- `src/components/TransactionForm.tsx` — fix validation
+- `src/pages/ProfilesPage.tsx` — new file
+- `src/components/BottomNav.tsx` — add profiles tab
+- `src/App.tsx` — add route
 - `src/contexts/LanguageContext.tsx` — translations
-- `src/types/database.ts` — Profile type, update Transaction, ACCOUNT_TYPES
-- `src/contexts/DataContext.tsx` — profiles, default accounts, general balance
-- `src/components/TransactionForm.tsx` — profile selector
-- `src/pages/TransactionsPage.tsx` — show profile on cards
-- `src/pages/DashboardPage.tsx` — general balance, profile on recent tx
-- `src/pages/AccountsPage.tsx` — translated account type labels
 
