@@ -96,6 +96,13 @@ const translations: Translations = {
   'general.cancel': { es: 'Cancelar', en: 'Cancel' },
   'general.delete': { es: 'Eliminar', en: 'Delete' },
   'general.edit': { es: 'Editar', en: 'Edit' },
+  // Transactions edit
+  'transactions.update': { es: 'Actualizar', en: 'Update' },
+  'transactions.edited': { es: 'Editado', en: 'Edited' },
+  'transactions.history': { es: 'Historial de cambios', en: 'Change history' },
+  'transactions.editedAt': { es: 'Editado el', en: 'Edited at' },
+  'transactions.oldValue': { es: 'Valor anterior', en: 'Old value' },
+  'transactions.newValue': { es: 'Nuevo valor', en: 'New value' },
 };
 
 interface LanguageContextType {
