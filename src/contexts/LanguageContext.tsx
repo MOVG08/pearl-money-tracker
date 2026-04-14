@@ -96,6 +96,19 @@ const translations: Translations = {
   'general.cancel': { es: 'Cancelar', en: 'Cancel' },
   'general.delete': { es: 'Eliminar', en: 'Delete' },
   'general.edit': { es: 'Editar', en: 'Edit' },
+  'general.back': { es: 'Volver', en: 'Back' },
+  // Accounts delete
+  'accounts.delete': { es: 'Eliminar cuenta', en: 'Delete account' },
+  'accounts.confirmDelete': { es: 'Toca de nuevo para confirmar', en: 'Tap again to confirm' },
+  // Transfers
+  'transactions.transfer': { es: 'Transferencia', en: 'Transfer' },
+  'transactions.sourceAccount': { es: 'Cuenta origen', en: 'Source account' },
+  'transactions.destinationAccount': { es: 'Cuenta destino', en: 'Destination account' },
+  'transactions.needTwoAccounts': { es: 'Necesitas al menos dos cuentas para transferir', en: 'You need at least two accounts to transfer' },
+  // Profile detail
+  'profiles.income': { es: 'Ingresos', en: 'Income' },
+  'profiles.expenses': { es: 'Gastos', en: 'Expenses' },
+  'profiles.movements': { es: 'Movimientos', en: 'Movements' },
   // Transactions edit
   'transactions.update': { es: 'Actualizar', en: 'Update' },
   'transactions.edited': { es: 'Editado', en: 'Edited' },

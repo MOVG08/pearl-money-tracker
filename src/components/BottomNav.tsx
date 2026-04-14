@@ -20,7 +20,7 @@ const BottomNav: React.FC = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
       <div className="max-w-lg mx-auto flex">
         {tabs.map(tab => {
-          const active = location.pathname === tab.path;
+          const active = tab.path === '/' ? location.pathname === '/' : location.pathname.startsWith(tab.path);
           return (
             <button
               key={tab.path}

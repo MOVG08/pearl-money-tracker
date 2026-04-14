@@ -16,6 +16,7 @@ interface DataContextType {
   addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Profile | null>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
+  deleteAccount: (id: string) => Promise<void>;
   getAccountBalance: (accountId: string) => number;
   getEditHistory: (transactionId: string) => TransactionEdit[];
   monthlyIncome: number;
@@ -82,7 +83,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateTransaction = async (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
-    // Find current transaction to record history
     const current = transactions.find(t => t.id === id);
     if (!current) return;
 
@@ -94,7 +94,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single();
     if (error) { toast.error(error.message); return; }
 
-    // Record edits
     const edits: { transaction_id: string; field: string; old_value: string; new_value: string }[] = [];
     for (const [field, newValue] of Object.entries(updates)) {
       const oldValue = String((current as any)[field] ?? '');
@@ -133,6 +132,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAccounts(prev => [...prev, data as Account]);
   };
 
+  const deleteAccount = async (id: string) => {
+    const { error } = await supabase.from('accounts').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setAccounts(prev => prev.filter(a => a.id !== id));
+  };
+
   const addProfile = async (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Profile | null> => {
     if (!user) return null;
     const { data, error } = await supabase
@@ -157,7 +162,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initial = account?.balance ?? 0;
     const income = transactions.filter(t => t.account_id === accountId && t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expenses = transactions.filter(t => t.account_id === accountId && t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    return initial + income - expenses;
+    // Transfers out (source)
+    const transfersOut = transactions.filter(t => t.account_id === accountId && t.type === 'transfer').reduce((s, t) => s + t.amount, 0);
+    // Transfers in (destination)
+    const transfersIn = transactions.filter(t => t.destination_account_id === accountId && t.type === 'transfer').reduce((s, t) => s + t.amount, 0);
+    return initial + income - expenses - transfersOut + transfersIn;
   };
 
   const getEditHistory = (transactionId: string) => {
@@ -165,10 +174,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const balance = useMemo(() => {
-    const accountBalances = accounts.reduce((s, a) => s + a.balance, 0);
-    const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    return accountBalances + totalIncome - totalExpenses;
+    return accounts.reduce((sum, acc) => sum + getAccountBalance(acc.id), 0);
   }, [accounts, transactions]);
 
   const now2 = new Date();
@@ -194,7 +200,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   return (
-    <DataContext.Provider value={{ transactions, accounts, profiles, transactionHistory, loading, addTransaction, updateTransaction, addAccount, addProfile, deleteTransaction, deleteProfile, getAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
+    <DataContext.Provider value={{ transactions, accounts, profiles, transactionHistory, loading, addTransaction, updateTransaction, addAccount, addProfile, deleteTransaction, deleteProfile, deleteAccount, getAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
       {children}
     </DataContext.Provider>
   );

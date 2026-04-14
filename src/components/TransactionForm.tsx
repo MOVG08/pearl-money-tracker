@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionType, type Transaction } from '@/types/database';
@@ -20,6 +20,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
   const [category, setCategory] = useState(editTransaction?.category || '');
   const [accountId, setAccountId] = useState(editTransaction?.account_id || accounts[0]?.id || '');
+  const [destinationAccountId, setDestinationAccountId] = useState(editTransaction?.destination_account_id || '');
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
@@ -40,6 +41,8 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   }, [profiles, profileSearch]);
 
   const selectedProfile = profiles.find(p => p.id === profileId);
+
+  const destinationAccounts = useMemo(() => accounts.filter(a => a.id !== accountId), [accounts, accountId]);
 
   if (accounts.length === 0) {
     return (
@@ -70,27 +73,25 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !category || !accountId) return;
+    if (!amount || !accountId) return;
+    if (type === 'transfer' && !destinationAccountId) return;
+    if (type !== 'transfer' && !category) return;
+
+    const txData: any = {
+      type,
+      amount: parseFloat(amount),
+      category: type === 'transfer' ? 'transfer' : category,
+      account_id: accountId,
+      profile_id: profileId || undefined,
+      destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
+      date,
+      notes: notes || undefined,
+    };
+
     if (editTransaction) {
-      updateTransaction(editTransaction.id, {
-        type,
-        amount: parseFloat(amount),
-        category,
-        account_id: accountId,
-        profile_id: profileId || undefined,
-        date,
-        notes: notes || undefined,
-      });
+      updateTransaction(editTransaction.id, txData);
     } else {
-      addTransaction({
-        type,
-        amount: parseFloat(amount),
-        category,
-        account_id: accountId,
-        profile_id: profileId || undefined,
-        date,
-        notes: notes || undefined,
-      });
+      addTransaction(txData);
     }
     onClose();
   };
@@ -99,14 +100,16 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
       {/* Type toggle */}
       <div className="flex gap-2 bg-secondary rounded-xl p-1">
-        {(['expense', 'income'] as const).map((t_type) => (
+        {(['expense', 'income', 'transfer'] as const).map((t_type) => (
           <button
             key={t_type}
             type="button"
             onClick={() => { setType(t_type); if (!editTransaction) setCategory(''); }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
               type === t_type
-                ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground' : 'bg-success text-success-foreground'
+                ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground'
+                  : t_type === 'income' ? 'bg-success text-success-foreground'
+                  : 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground'
             }`}
           >
@@ -127,15 +130,20 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         required
       />
 
-      {/* Account */}
+      {/* Source Account */}
       <div>
-        <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.account')}</label>
+        <label className="text-xs text-muted-foreground mb-1.5 block">
+          {type === 'transfer' ? t('transactions.sourceAccount') : t('transactions.account')}
+        </label>
         <div className="flex gap-2 flex-wrap">
           {accounts.map(acc => (
             <button
               key={acc.id}
               type="button"
-              onClick={() => setAccountId(acc.id)}
+              onClick={() => {
+                setAccountId(acc.id);
+                if (destinationAccountId === acc.id) setDestinationAccountId('');
+              }}
               className={`px-3 py-2 rounded-lg text-sm transition-all ${
                 accountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
               }`}
@@ -146,111 +154,138 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         </div>
       </div>
 
-      {/* Profile selector */}
-      <div>
-        <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
-        {selectedProfile ? (
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
-            <span className="text-sm">{selectedProfile.type === 'person' ? '👤' : '🏢'}</span>
-            <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
-            <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
-              <X className="w-4 h-4" />
-            </button>
+      {/* Destination Account (transfer only) */}
+      {type === 'transfer' && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.destinationAccount')}</label>
+          <div className="flex gap-2 flex-wrap">
+            {destinationAccounts.map(acc => (
+              <button
+                key={acc.id}
+                type="button"
+                onClick={() => setDestinationAccountId(acc.id)}
+                className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                  destinationAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                {acc.name}
+              </button>
+            ))}
           </div>
-        ) : (
-          <div className="relative">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={t('profiles.search')}
-                value={profileSearch}
-                onChange={(e) => { setProfileSearch(e.target.value); setShowProfileDropdown(true); }}
-                onFocus={() => setShowProfileDropdown(true)}
-                className="h-11 pl-9 bg-secondary border-border/50 rounded-xl"
-              />
+          {destinationAccounts.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">{t('transactions.needTwoAccounts')}</p>
+          )}
+        </div>
+      )}
+
+      {/* Profile selector (not for transfers) */}
+      {type !== 'transfer' && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
+          {selectedProfile ? (
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
+              <span className="text-sm">{selectedProfile.type === 'person' ? '👤' : '🏢'}</span>
+              <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
+              <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            {showProfileDropdown && (
-              <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                {filteredProfiles.map(p => (
+          ) : (
+            <div className="relative">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('profiles.search')}
+                  value={profileSearch}
+                  onChange={(e) => { setProfileSearch(e.target.value); setShowProfileDropdown(true); }}
+                  onFocus={() => setShowProfileDropdown(true)}
+                  className="h-11 pl-9 bg-secondary border-border/50 rounded-xl"
+                />
+              </div>
+              {showProfileDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  {filteredProfiles.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <span>{p.type === 'person' ? '👤' : '🏢'}</span>
+                      <span>{p.name}</span>
+                    </button>
+                  ))}
                   <button
-                    key={p.id}
                     type="button"
-                    onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
+                    onClick={() => { setShowQuickCreate(true); setShowProfileDropdown(false); setNewProfileName(profileSearch); }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-secondary transition-colors border-t border-border"
                   >
-                    <span>{p.type === 'person' ? '👤' : '🏢'}</span>
-                    <span>{p.name}</span>
+                    <Plus className="w-4 h-4" />
+                    <span>{t('profiles.quickCreate')}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {showQuickCreate && (
+            <div className="mt-2 bg-secondary rounded-xl p-3 space-y-3">
+              <Input
+                placeholder={t('profiles.name')}
+                value={newProfileName}
+                onChange={(e) => setNewProfileName(e.target.value)}
+                className="h-10 bg-background border-border/50 rounded-lg text-sm"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                {PROFILE_TYPES.map(pt => (
+                  <button
+                    key={pt.value}
+                    type="button"
+                    onClick={() => setNewProfileType(pt.value)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-all ${
+                      newProfileType === pt.value ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
+                    }`}
+                  >
+                    <span>{pt.icon}</span>
+                    <span>{t(pt.labelKey)}</span>
                   </button>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => { setShowQuickCreate(true); setShowProfileDropdown(false); setNewProfileName(profileSearch); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-secondary transition-colors border-t border-border"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>{t('profiles.quickCreate')}</span>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setShowQuickCreate(false)} className="flex-1 py-2 rounded-lg text-xs text-muted-foreground bg-background">
+                  {t('general.cancel')}
+                </button>
+                <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">
+                  {t('profiles.save')}
                 </button>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Quick create inline form */}
-        {showQuickCreate && (
-          <div className="mt-2 bg-secondary rounded-xl p-3 space-y-3">
-            <Input
-              placeholder={t('profiles.name')}
-              value={newProfileName}
-              onChange={(e) => setNewProfileName(e.target.value)}
-              className="h-10 bg-background border-border/50 rounded-lg text-sm"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              {PROFILE_TYPES.map(pt => (
-                <button
-                  key={pt.value}
-                  type="button"
-                  onClick={() => setNewProfileType(pt.value)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-all ${
-                    newProfileType === pt.value ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
-                  }`}
-                >
-                  <span>{pt.icon}</span>
-                  <span>{t(pt.labelKey)}</span>
-                </button>
-              ))}
             </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setShowQuickCreate(false)} className="flex-1 py-2 rounded-lg text-xs text-muted-foreground bg-background">
-                {t('general.cancel')}
-              </button>
-              <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">
-                {t('profiles.save')}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Category */}
-      <div>
-        <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
-        <div className="grid grid-cols-3 gap-2">
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setCategory(cat.id)}
-              className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${
-                category === cat.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-              }`}
-            >
-              <span className="text-lg">{cat.icon}</span>
-              <span className="truncate w-full text-center">{cat.name}</span>
-            </button>
-          ))}
+          )}
         </div>
-      </div>
+      )}
+
+      {/* Category (not for transfers) */}
+      {type !== 'transfer' && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
+          <div className="grid grid-cols-3 gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setCategory(cat.id)}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${
+                  category === cat.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                <span className="text-lg">{cat.icon}</span>
+                <span className="truncate w-full text-center">{cat.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Date */}
       <Input

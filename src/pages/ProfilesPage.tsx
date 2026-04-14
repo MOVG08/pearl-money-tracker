@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { PROFILE_TYPES } from '@/types/database';
@@ -8,6 +9,7 @@ import { Plus, Trash2, Users } from 'lucide-react';
 
 const ProfilesPage: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { profiles, addProfile, deleteProfile } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
@@ -20,6 +22,11 @@ const ProfilesPage: React.FC = () => {
     setName('');
     setType('person');
     setShowForm(false);
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteProfile(id);
   };
 
   return (
@@ -79,14 +86,18 @@ const ProfilesPage: React.FC = () => {
       ) : (
         <div className="space-y-2">
           {profiles.map(profile => (
-            <Card key={profile.id} className="flex items-center gap-3 p-4 rounded-xl bg-card border-border/50">
+            <Card
+              key={profile.id}
+              onClick={() => navigate(`/profiles/${profile.id}`)}
+              className="flex items-center gap-3 p-4 rounded-xl bg-card border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
+            >
               <span className="text-2xl">{profile.type === 'person' ? '👤' : '🏢'}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
                 <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
               </div>
               <button
-                onClick={() => deleteProfile(profile.id)}
+                onClick={(e) => handleDelete(profile.id, e)}
                 className="p-2 text-muted-foreground hover:text-destructive transition-colors"
               >
                 <Trash2 className="w-4 h-4" />

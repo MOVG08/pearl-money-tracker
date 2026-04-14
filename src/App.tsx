@@ -9,7 +9,9 @@ import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import AccountsPage from "./pages/AccountsPage";
+import AccountDetailPage from "./pages/AccountDetailPage";
 import ProfilesPage from "./pages/ProfilesPage";
+import ProfileDetailPage from "./pages/ProfileDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import BottomNav from "./components/BottomNav";
 import NotFound from "./pages/NotFound";
@@ -36,7 +38,9 @@ const AppContent = () => {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
+          <Route path="/profiles/:id" element={<ProfileDetailPage />} />
           <Route path="/accounts" element={<AccountsPage />} />
+          <Route path="/accounts/:id" element={<AccountDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
