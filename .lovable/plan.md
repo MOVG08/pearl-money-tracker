@@ -1,36 +1,54 @@
 
 
-## Plan: Fix transaction saving + Add Profiles as main section
+## Plan: Dashboard Analytics & Visualizations
 
-### Problem
-1. Transactions can't be saved because `profileId` is required in the form validation (`if (!amount || !category || !accountId || !profileId) return;`), but users have no profiles yet and no dedicated place to manage them.
-2. Profiles section is not accessible from main navigation.
+### Overview
+Redesign the dashboard to be an interactive analytics hub with clickable cards, filterable charts, and a balance timeline.
 
-### Changes
+### 1. Clickable Income card → Pie chart by profile
+- When user taps "Ingresos" card, expand/toggle a section below showing:
+  - Pie chart grouping income by profile (who paid)
+  - Legend with percentage and total per profile
+  - Transactions without a profile grouped as "Sin perfil" / "No profile"
 
-**1. Make `profile_id` optional in transactions**
-- In `src/types/database.ts`: make `profile_id` optional (`profile_id?: string`)
-- In `src/components/TransactionForm.tsx`: remove `!profileId` from the validation check so transactions can be saved without a profile
+### 2. Clickable Expense card → Pie chart by profile
+- Same behavior for "Gastos" card
+- Replace current category-based pie chart with profile-based grouping on click
+- Show percentage and total per profile
 
-**2. Create `src/pages/ProfilesPage.tsx`**
-- List all profiles with name and type (person/business)
-- Button to add new profile (name + type selector)
-- Delete profile option
-- Clean card-based layout matching existing pages
+### 3. Balance line chart
+- Add a `LineChart` (Recharts) below the cards
+- X-axis: dates, Y-axis: cumulative balance
+- Sort all transactions by date, compute running total (account balances + income - expenses)
+- Default to current month
 
-**3. Add Profiles to main navigation**
-- In `src/components/BottomNav.tsx`: add a Profiles tab (Users icon) between Transactions and Accounts
-- In `src/App.tsx`: add route `/profiles` → `ProfilesPage`
-- Add translation keys `nav.profiles` in `src/contexts/LanguageContext.tsx`
+### 4. Filters bar
+- Add a filter section at the top with:
+  - **Account** dropdown (from `accounts`)
+  - **Profile** dropdown (from `profiles`)
+  - **Date range** picker (start/end date using Shadcn Calendar/Popover)
+- All charts and the recent transactions list react to these filters
+- Default: current month, all accounts, all profiles
 
-**4. Add translations**
-- Add missing profile-related keys: `profiles.title`, `profiles.add`, `profiles.empty`, `profiles.delete`, etc.
+### 5. Transaction history filtered view
+- Below the charts, show filtered transaction list (replaces current "recent transactions")
+- Respects all active filters (account, profile, date range)
+- Shows all matching transactions, not just last 5
+
+### 6. Translations
+- Add keys: `dashboard.incomeByProfile`, `dashboard.expenseByProfile`, `dashboard.balanceOverTime`, `dashboard.filters`, `dashboard.allAccounts`, `dashboard.allProfiles`, `dashboard.noProfile`, `dashboard.from`, `dashboard.to`, `dashboard.history`
+
+### 7. UX details
+- Use `framer-motion` `AnimatePresence` for smooth expand/collapse of chart sections
+- Charts use `ResponsiveContainer` for mobile-friendly sizing
+- Clean glass card styling consistent with existing design
 
 ### Files to modify
-- `src/types/database.ts` — make profile_id optional
-- `src/components/TransactionForm.tsx` — fix validation
-- `src/pages/ProfilesPage.tsx` — new file
-- `src/components/BottomNav.tsx` — add profiles tab
-- `src/App.tsx` — add route
-- `src/contexts/LanguageContext.tsx` — translations
+- `src/pages/DashboardPage.tsx` — complete rewrite with interactive cards, charts, filters
+- `src/contexts/LanguageContext.tsx` — new translation keys
+
+### Technical notes
+- Recharts `LineChart`, `Line`, `XAxis`, `YAxis`, `Tooltip` already available (recharts is installed)
+- Shadcn `Popover` + `Calendar` for date range filter
+- `Select` component for account/profile dropdowns
 
