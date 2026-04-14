@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { ACCOUNT_TYPES } from '@/types/database';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 
 const AccountsPage: React.FC = () => {
   const { t } = useLanguage();
-  const { accounts, addAccount, getAccountBalance } = useData();
+  const navigate = useNavigate();
+  const { accounts, addAccount, deleteAccount, getAccountBalance } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<'cash' | 'bank' | 'credit_card' | 'savings' | 'other'>('bank');
   const [balance, setBalance] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +27,17 @@ const AccountsPage: React.FC = () => {
     setName('');
     setBalance('');
     setShowForm(false);
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirmDelete === id) {
+      deleteAccount(id);
+      setConfirmDelete(null);
+    } else {
+      setConfirmDelete(id);
+      setTimeout(() => setConfirmDelete(null), 3000);
+    }
   };
 
   return (
@@ -102,14 +116,23 @@ const AccountsPage: React.FC = () => {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="glass rounded-xl p-4 flex items-center gap-3"
+                onClick={() => navigate(`/accounts/${acc.id}`)}
+                className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <span className="text-2xl">{at?.icon || '📁'}</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground">{acc.name}</p>
                   <p className="text-xs text-muted-foreground">{at ? t(at.labelKey) : acc.type}</p>
                 </div>
-                <span className="font-mono text-sm font-medium text-foreground">{formatCurrency(getAccountBalance(acc.id))}</span>
+                <span className="font-mono text-sm font-medium text-foreground mr-2">{formatCurrency(getAccountBalance(acc.id))}</span>
+                <button
+                  onClick={(e) => handleDelete(acc.id, e)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    confirmDelete === acc.id ? 'bg-destructive text-destructive-foreground' : 'text-muted-foreground hover:text-destructive'
+                  }`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </motion.div>
             );
           })}
