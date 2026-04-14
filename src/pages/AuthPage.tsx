@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,8 +25,8 @@ const AuthPage: React.FC = () => {
       } else {
         await signUp(email, password, name);
       }
-    } catch {
-      // TODO: Show toast error
+    } catch (err: any) {
+      toast.error(err.message || 'Authentication error');
     } finally {
       setLoading(false);
     }
