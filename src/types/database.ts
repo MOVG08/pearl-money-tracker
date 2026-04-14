@@ -36,6 +36,15 @@ export interface Transaction {
   updated_at: string;
 }
 
+export interface TransactionEdit {
+  id: string;
+  transaction_id: string;
+  field: string;
+  old_value: string;
+  new_value: string;
+  edited_at: string;
+}
+
 export interface Category {
   id: string;
   name: string;

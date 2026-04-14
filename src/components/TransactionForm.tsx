@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionType } from '@/types/database';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionType, type Transaction } from '@/types/database';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
@@ -9,19 +9,20 @@ import { Search, Plus, X } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
+  editTransaction?: Transaction;
 }
 
-const TransactionForm: React.FC<Props> = ({ onClose }) => {
+const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const { t } = useLanguage();
-  const { addTransaction, accounts, profiles, addProfile } = useData();
+  const { addTransaction, updateTransaction, accounts, profiles, addProfile } = useData();
   const navigate = useNavigate();
-  const [type, setType] = useState<TransactionType>('expense');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [accountId, setAccountId] = useState(accounts[0]?.id || '');
-  const [profileId, setProfileId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
+  const [type, setType] = useState<TransactionType>(editTransaction?.type || 'expense');
+  const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
+  const [category, setCategory] = useState(editTransaction?.category || '');
+  const [accountId, setAccountId] = useState(editTransaction?.account_id || accounts[0]?.id || '');
+  const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
+  const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState(editTransaction?.notes || '');
 
   // Profile search & quick create
   const [profileSearch, setProfileSearch] = useState('');
@@ -70,15 +71,27 @@ const TransactionForm: React.FC<Props> = ({ onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !category || !accountId) return;
-    addTransaction({
-      type,
-      amount: parseFloat(amount),
-      category,
-      account_id: accountId,
-      profile_id: profileId || undefined,
-      date,
-      notes: notes || undefined,
-    });
+    if (editTransaction) {
+      updateTransaction(editTransaction.id, {
+        type,
+        amount: parseFloat(amount),
+        category,
+        account_id: accountId,
+        profile_id: profileId || undefined,
+        date,
+        notes: notes || undefined,
+      });
+    } else {
+      addTransaction({
+        type,
+        amount: parseFloat(amount),
+        category,
+        account_id: accountId,
+        profile_id: profileId || undefined,
+        date,
+        notes: notes || undefined,
+      });
+    }
     onClose();
   };
 
@@ -90,7 +103,7 @@ const TransactionForm: React.FC<Props> = ({ onClose }) => {
           <button
             key={t_type}
             type="button"
-            onClick={() => { setType(t_type); setCategory(''); }}
+            onClick={() => { setType(t_type); if (!editTransaction) setCategory(''); }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
               type === t_type
                 ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground' : 'bg-success text-success-foreground'
@@ -262,7 +275,7 @@ const TransactionForm: React.FC<Props> = ({ onClose }) => {
           {t('general.cancel')}
         </button>
         <button type="submit" className="flex-1 py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground active:scale-95 transition-transform">
-          {t('transactions.save')}
+          {editTransaction ? t('transactions.update') : t('transactions.save')}
         </button>
       </div>
     </form>

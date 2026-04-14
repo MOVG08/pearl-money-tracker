@@ -11,7 +11,7 @@ const formatCurrency = (amount: number) =>
 
 const AccountsPage: React.FC = () => {
   const { t } = useLanguage();
-  const { accounts, addAccount } = useData();
+  const { accounts, addAccount, getAccountBalance } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<'cash' | 'bank' | 'credit_card' | 'savings' | 'other'>('bank');
@@ -109,7 +109,7 @@ const AccountsPage: React.FC = () => {
                   <p className="text-sm font-medium text-foreground">{acc.name}</p>
                   <p className="text-xs text-muted-foreground">{at ? t(at.labelKey) : acc.type}</p>
                 </div>
-                <span className="font-mono text-sm font-medium text-foreground">{formatCurrency(acc.balance)}</span>
+                <span className="font-mono text-sm font-medium text-foreground">{formatCurrency(getAccountBalance(acc.id))}</span>
               </motion.div>
             );
           })}
