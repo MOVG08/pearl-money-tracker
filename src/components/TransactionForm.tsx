@@ -56,9 +56,9 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     );
   }
 
-  const handleQuickCreateProfile = () => {
+  const handleQuickCreateProfile = async () => {
     if (!newProfileName.trim()) return;
-    const newProfile = addProfile({ name: newProfileName.trim(), type: newProfileType });
+    const newProfile = await addProfile({ name: newProfileName.trim(), type: newProfileType });
     if (newProfile) {
       setProfileId(newProfile.id);
     }
