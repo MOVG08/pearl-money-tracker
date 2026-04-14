@@ -1,17 +1,21 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Transaction, Account, Profile, TransactionEdit } from '@/types/database';
+import { toast } from 'sonner';
 
 interface DataContextType {
   transactions: Transaction[];
   accounts: Account[];
   profiles: Profile[];
   transactionHistory: TransactionEdit[];
-  addTransaction: (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
-  updateTransaction: (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => void;
-  addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
-  addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Profile;
-  deleteTransaction: (id: string) => void;
-  deleteProfile: (id: string) => void;
+  loading: boolean;
+  addTransaction: (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateTransaction: (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => Promise<void>;
+  addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Profile | null>;
+  deleteTransaction: (id: string) => Promise<void>;
+  deleteProfile: (id: string) => Promise<void>;
   getAccountBalance: (accountId: string) => number;
   getEditHistory: (transactionId: string) => TransactionEdit[];
   monthlyIncome: number;
@@ -21,89 +25,130 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const createDefaultAccounts = (): Account[] => {
-  const now = new Date().toISOString();
-  return [
-    { id: crypto.randomUUID(), user_id: '1', name: 'Efectivo', type: 'cash', currency: 'MXN', balance: 0, created_at: now, updated_at: now },
-    { id: crypto.randomUUID(), user_id: '1', name: 'Banco', type: 'bank', currency: 'MXN', balance: 0, created_at: now, updated_at: now },
-  ];
-};
-
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>(createDefaultAccounts);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [transactionHistory, setTransactionHistory] = useState<TransactionEdit[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const addTransaction = (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    const now = new Date().toISOString();
-    const newTx: Transaction = {
-      ...tx,
-      id: crypto.randomUUID(),
-      user_id: '1',
-      created_at: now,
-      updated_at: now,
-    };
-    setTransactions(prev => [newTx, ...prev]);
+  const fetchAll = useCallback(async () => {
+    if (!user) {
+      setTransactions([]);
+      setAccounts([]);
+      setProfiles([]);
+      setTransactionHistory([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const [txRes, accRes, profRes, histRes] = await Promise.all([
+        supabase.from('transactions').select('*').order('date', { ascending: false }),
+        supabase.from('accounts').select('*').order('created_at', { ascending: true }),
+        supabase.from('profiles').select('*').order('name', { ascending: true }),
+        supabase.from('transaction_edits').select('*').order('edited_at', { ascending: false }),
+      ]);
+
+      if (txRes.error) throw txRes.error;
+      if (accRes.error) throw accRes.error;
+      if (profRes.error) throw profRes.error;
+      if (histRes.error) throw histRes.error;
+
+      setTransactions(txRes.data as Transaction[]);
+      setAccounts(accRes.data as Account[]);
+      setProfiles(profRes.data as Profile[]);
+      setTransactionHistory(histRes.data as TransactionEdit[]);
+    } catch (err: any) {
+      toast.error(err.message || 'Error fetching data');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  const addTransaction = async (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({ ...tx, user_id: user.id })
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return; }
+    setTransactions(prev => [data as Transaction, ...prev]);
   };
 
-  const updateTransaction = (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
-    const now = new Date().toISOString();
-    setTransactions(prev => prev.map(tx => {
-      if (tx.id !== id) return tx;
-      // Record history for each changed field
-      const edits: TransactionEdit[] = [];
-      for (const [field, newValue] of Object.entries(updates)) {
-        const oldValue = String((tx as any)[field] ?? '');
-        const newVal = String(newValue ?? '');
-        if (oldValue !== newVal) {
-          edits.push({
-            id: crypto.randomUUID(),
-            transaction_id: id,
-            field,
-            old_value: oldValue,
-            new_value: newVal,
-            edited_at: now,
-          });
-        }
+  const updateTransaction = async (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
+    // Find current transaction to record history
+    const current = transactions.find(t => t.id === id);
+    if (!current) return;
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return; }
+
+    // Record edits
+    const edits: { transaction_id: string; field: string; old_value: string; new_value: string }[] = [];
+    for (const [field, newValue] of Object.entries(updates)) {
+      const oldValue = String((current as any)[field] ?? '');
+      const newVal = String(newValue ?? '');
+      if (oldValue !== newVal) {
+        edits.push({ transaction_id: id, field, old_value: oldValue, new_value: newVal });
       }
-      if (edits.length > 0) {
-        setTransactionHistory(prev => [...prev, ...edits]);
+    }
+    if (edits.length > 0) {
+      const { data: editData, error: editError } = await supabase
+        .from('transaction_edits')
+        .insert(edits)
+        .select();
+      if (!editError && editData) {
+        setTransactionHistory(prev => [...(editData as TransactionEdit[]), ...prev]);
       }
-      return { ...tx, ...updates, updated_at: now };
-    }));
+    }
+
+    setTransactions(prev => prev.map(t => t.id === id ? (data as Transaction) : t));
   };
 
-  const addAccount = (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    const now = new Date().toISOString();
-    const newAcc: Account = {
-      ...acc,
-      id: crypto.randomUUID(),
-      user_id: '1',
-      created_at: now,
-      updated_at: now,
-    };
-    setAccounts(prev => [...prev, newAcc]);
+  const deleteTransaction = async (id: string) => {
+    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
-  const addProfile = (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Profile => {
-    const now = new Date().toISOString();
-    const newProfile: Profile = {
-      ...profile,
-      id: crypto.randomUUID(),
-      user_id: '1',
-      created_at: now,
-      updated_at: now,
-    };
+  const addAccount = async (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('accounts')
+      .insert({ ...acc, user_id: user.id })
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return; }
+    setAccounts(prev => [...prev, data as Account]);
+  };
+
+  const addProfile = async (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Profile | null> => {
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({ ...profile, user_id: user.id })
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return null; }
+    const newProfile = data as Profile;
     setProfiles(prev => [...prev, newProfile]);
     return newProfile;
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
-  };
-
-  const deleteProfile = (id: string) => {
+  const deleteProfile = async (id: string) => {
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
     setProfiles(prev => prev.filter(p => p.id !== id));
   };
 
@@ -149,7 +194,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   return (
-    <DataContext.Provider value={{ transactions, accounts, profiles, transactionHistory, addTransaction, updateTransaction, addAccount, addProfile, deleteTransaction, deleteProfile, getAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
+    <DataContext.Provider value={{ transactions, accounts, profiles, transactionHistory, loading, addTransaction, updateTransaction, addAccount, addProfile, deleteTransaction, deleteProfile, getAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
       {children}
     </DataContext.Provider>
   );
