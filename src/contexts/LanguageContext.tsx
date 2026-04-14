@@ -73,6 +73,18 @@ const translations: Translations = {
   'profiles.needProfile': { es: 'Necesitas crear un perfil primero', en: 'You need to create a profile first' },
   'profiles.search': { es: 'Buscar perfil...', en: 'Search profile...' },
   'profiles.quickCreate': { es: 'Crear nuevo perfil', en: 'Create new profile' },
+  // Dashboard analytics
+  'dashboard.incomeByProfile': { es: 'Ingresos por perfil', en: 'Income by profile' },
+  'dashboard.expenseByProfile': { es: 'Gastos por perfil', en: 'Expenses by profile' },
+  'dashboard.balanceOverTime': { es: 'Balance en el tiempo', en: 'Balance over time' },
+  'dashboard.filters': { es: 'Filtros', en: 'Filters' },
+  'dashboard.allAccounts': { es: 'Todas las cuentas', en: 'All accounts' },
+  'dashboard.allProfiles': { es: 'Todos los perfiles', en: 'All profiles' },
+  'dashboard.noProfile': { es: 'Sin perfil', en: 'No profile' },
+  'dashboard.from': { es: 'Desde', en: 'From' },
+  'dashboard.to': { es: 'Hasta', en: 'To' },
+  'dashboard.history': { es: 'Historial', en: 'History' },
+  'dashboard.tapToSee': { es: 'Toca para ver detalle', en: 'Tap to see details' },
   // Settings
   'settings.title': { es: 'Ajustes', en: 'Settings' },
   'settings.language': { es: 'Idioma', en: 'Language' },
