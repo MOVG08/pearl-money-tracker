@@ -6,14 +6,25 @@ import { PROFILE_TYPES } from '@/types/database';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, Users } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const ProfilesPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { profiles, addProfile, deleteProfile } = useData();
+  const { profiles, transactions, addProfile, deleteProfile } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<'person' | 'business'>('person');
+  const [showCannotDelete, setShowCannotDelete] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +37,11 @@ const ProfilesPage: React.FC = () => {
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const hasTransactions = transactions.some(tx => tx.profile_id === id);
+    if (hasTransactions) {
+      setShowCannotDelete(true);
+      return;
+    }
     deleteProfile(id);
   };
 
@@ -106,6 +122,20 @@ const ProfilesPage: React.FC = () => {
           ))}
         </div>
       )}
+
+      <AlertDialog open={showCannotDelete} onOpenChange={setShowCannotDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('profiles.cannotDelete')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('profiles.unassignFirst')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowCannotDelete(false)}>
+              {t('general.ok')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

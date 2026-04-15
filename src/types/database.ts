@@ -1,14 +1,30 @@
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
+export type CreditType = 'credit_card' | 'mortgage' | 'auto' | 'personal';
+
 export interface Account {
   id: string;
   user_id: string;
   name: string;
-  type: 'cash' | 'bank' | 'credit_card' | 'savings' | 'other';
+  type: 'cash' | 'bank' | 'savings' | 'other';
   currency: string;
   balance: number;
   icon?: string;
   color?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreditAccount {
+  id: string;
+  user_id: string;
+  name: string;
+  credit_type: CreditType;
+  credit_limit: number;
+  next_payment_date?: string;
+  cut_off_date?: string;
+  payment_due_date?: string;
+  min_monthly_spend: number;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +43,7 @@ export interface Transaction {
   user_id: string;
   account_id: string;
   destination_account_id?: string;
+  credit_account_id?: string;
   profile_id?: string;
   type: TransactionType;
   amount: number;
@@ -62,6 +79,7 @@ export const EXPENSE_CATEGORIES: Category[] = [
   { id: 'education', name: 'Educación', icon: '📚', type: 'expense' },
   { id: 'shopping', name: 'Compras', icon: '🛍️', type: 'expense' },
   { id: 'services', name: 'Servicios', icon: '📱', type: 'expense' },
+  { id: 'card_payment', name: 'Pago de tarjeta', icon: '💳', type: 'expense' },
   { id: 'other_expense', name: 'Otros', icon: '📦', type: 'expense' },
 ];
 
@@ -76,9 +94,15 @@ export const INCOME_CATEGORIES: Category[] = [
 export const ACCOUNT_TYPES = [
   { value: 'cash' as const, labelKey: 'accountType.cash', icon: '💵' },
   { value: 'bank' as const, labelKey: 'accountType.bank', icon: '🏦' },
-  { value: 'credit_card' as const, labelKey: 'accountType.credit_card', icon: '💳' },
   { value: 'savings' as const, labelKey: 'accountType.savings', icon: '🐷' },
   { value: 'other' as const, labelKey: 'accountType.other', icon: '📁' },
+];
+
+export const CREDIT_TYPES = [
+  { value: 'credit_card' as const, labelKey: 'credit.creditCard', icon: '💳' },
+  { value: 'mortgage' as const, labelKey: 'credit.mortgage', icon: '🏠' },
+  { value: 'auto' as const, labelKey: 'credit.auto', icon: '🚗' },
+  { value: 'personal' as const, labelKey: 'credit.personal', icon: '💰' },
 ];
 
 export const PROFILE_TYPES = [

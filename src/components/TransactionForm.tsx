@@ -5,7 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionT
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus, X, CreditCard } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -14,18 +14,19 @@ interface Props {
 
 const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const { t } = useLanguage();
-  const { addTransaction, updateTransaction, accounts, profiles, addProfile } = useData();
+  const { addTransaction, updateTransaction, accounts, profiles, creditAccounts, addProfile } = useData();
   const navigate = useNavigate();
   const [type, setType] = useState<TransactionType>(editTransaction?.type || 'expense');
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
   const [category, setCategory] = useState(editTransaction?.category || '');
   const [accountId, setAccountId] = useState(editTransaction?.account_id || accounts[0]?.id || '');
   const [destinationAccountId, setDestinationAccountId] = useState(editTransaction?.destination_account_id || '');
+  const [creditAccountId, setCreditAccountId] = useState(editTransaction?.credit_account_id || '');
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
+  const [chargeToCard, setChargeToCard] = useState(!!editTransaction?.credit_account_id);
 
-  // Profile search & quick create
   const [profileSearch, setProfileSearch] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
@@ -41,7 +42,6 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   }, [profiles, profileSearch]);
 
   const selectedProfile = profiles.find(p => p.id === profileId);
-
   const destinationAccounts = useMemo(() => accounts.filter(a => a.id !== accountId), [accounts, accountId]);
 
   if (accounts.length === 0) {
@@ -49,10 +49,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       <div className="glass rounded-2xl p-6 space-y-4 text-center">
         <p className="text-3xl">🏦</p>
         <p className="text-foreground font-medium">{t('accounts.needAccount')}</p>
-        <button
-          onClick={() => { onClose(); navigate('/accounts'); }}
-          className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-medium"
-        >
+        <button onClick={() => { onClose(); navigate('/accounts'); }} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-medium">
           {t('accounts.add')}
         </button>
       </div>
@@ -62,9 +59,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const handleQuickCreateProfile = async () => {
     if (!newProfileName.trim()) return;
     const newProfile = await addProfile({ name: newProfileName.trim(), type: newProfileType });
-    if (newProfile) {
-      setProfileId(newProfile.id);
-    }
+    if (newProfile) setProfileId(newProfile.id);
     setNewProfileName('');
     setShowQuickCreate(false);
     setShowProfileDropdown(false);
@@ -84,6 +79,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       account_id: accountId,
       profile_id: profileId || undefined,
       destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
+      credit_account_id: (type === 'expense' && chargeToCard && creditAccountId) ? creditAccountId : undefined,
       date,
       notes: notes || undefined,
     };
@@ -99,35 +95,35 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   return (
     <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
       {/* Type toggle */}
-      <div className="flex gap-2 bg-secondary rounded-xl p-1">
-        {(['expense', 'income', 'transfer'] as const).map((t_type) => (
-          <button
-            key={t_type}
-            type="button"
-            onClick={() => { setType(t_type); if (!editTransaction) setCategory(''); }}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              type === t_type
-                ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground'
-                  : t_type === 'income' ? 'bg-success text-success-foreground'
-                  : 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground'
-            }`}
-          >
-            {t(`transactions.${t_type}`)}
-          </button>
-        ))}
+      <div>
+        <div className="flex gap-2 bg-secondary rounded-xl p-1">
+          {(['expense', 'income', 'transfer'] as const).map((t_type) => (
+            <button
+              key={t_type}
+              type="button"
+              onClick={() => { setType(t_type); if (!editTransaction) { setCategory(''); setCreditAccountId(''); setChargeToCard(false); } }}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                type === t_type
+                  ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground'
+                    : t_type === 'income' ? 'bg-success text-success-foreground'
+                    : 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {t(`transactions.${t_type}`)}
+            </button>
+          ))}
+        </div>
+        {type === 'transfer' && (
+          <p className="text-xs text-muted-foreground mt-1.5 text-center">{t('transactions.transferHint')}</p>
+        )}
       </div>
 
       {/* Amount */}
       <Input
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        placeholder="0.00"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        className="h-14 text-2xl font-mono text-center bg-secondary border-border/50 rounded-xl"
-        required
+        type="number" inputMode="decimal" step="0.01" placeholder="0.00"
+        value={amount} onChange={(e) => setAmount(e.target.value)}
+        className="h-14 text-2xl font-mono text-center bg-secondary border-border/50 rounded-xl" required
       />
 
       {/* Source Account */}
@@ -137,19 +133,10 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         </label>
         <div className="flex gap-2 flex-wrap">
           {accounts.map(acc => (
-            <button
-              key={acc.id}
-              type="button"
-              onClick={() => {
-                setAccountId(acc.id);
-                if (destinationAccountId === acc.id) setDestinationAccountId('');
-              }}
-              className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                accountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-              }`}
-            >
-              {acc.name}
-            </button>
+            <button key={acc.id} type="button"
+              onClick={() => { setAccountId(acc.id); if (destinationAccountId === acc.id) setDestinationAccountId(''); }}
+              className={`px-3 py-2 rounded-lg text-sm transition-all ${accountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+            >{acc.name}</button>
           ))}
         </div>
       </div>
@@ -160,16 +147,10 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.destinationAccount')}</label>
           <div className="flex gap-2 flex-wrap">
             {destinationAccounts.map(acc => (
-              <button
-                key={acc.id}
-                type="button"
+              <button key={acc.id} type="button"
                 onClick={() => setDestinationAccountId(acc.id)}
-                className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                  destinationAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                }`}
-              >
-                {acc.name}
-              </button>
+                className={`px-3 py-2 rounded-lg text-sm transition-all ${destinationAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+              >{acc.name}</button>
             ))}
           </div>
           {destinationAccounts.length === 0 && (
@@ -194,9 +175,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
             <div className="relative">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('profiles.search')}
-                  value={profileSearch}
+                <Input placeholder={t('profiles.search')} value={profileSearch}
                   onChange={(e) => { setProfileSearch(e.target.value); setShowProfileDropdown(true); }}
                   onFocus={() => setShowProfileDropdown(true)}
                   className="h-11 pl-9 bg-secondary border-border/50 rounded-xl"
@@ -205,60 +184,41 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               {showProfileDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {filteredProfiles.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
+                    <button key={p.id} type="button"
                       onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                     >
-                      <span>{p.type === 'person' ? '👤' : '🏢'}</span>
-                      <span>{p.name}</span>
+                      <span>{p.type === 'person' ? '👤' : '🏢'}</span><span>{p.name}</span>
                     </button>
                   ))}
-                  <button
-                    type="button"
+                  <button type="button"
                     onClick={() => { setShowQuickCreate(true); setShowProfileDropdown(false); setNewProfileName(profileSearch); }}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-secondary transition-colors border-t border-border"
                   >
-                    <Plus className="w-4 h-4" />
-                    <span>{t('profiles.quickCreate')}</span>
+                    <Plus className="w-4 h-4" /><span>{t('profiles.quickCreate')}</span>
                   </button>
                 </div>
               )}
             </div>
           )}
-
           {showQuickCreate && (
             <div className="mt-2 bg-secondary rounded-xl p-3 space-y-3">
-              <Input
-                placeholder={t('profiles.name')}
-                value={newProfileName}
+              <Input placeholder={t('profiles.name')} value={newProfileName}
                 onChange={(e) => setNewProfileName(e.target.value)}
-                className="h-10 bg-background border-border/50 rounded-lg text-sm"
-                autoFocus
+                className="h-10 bg-background border-border/50 rounded-lg text-sm" autoFocus
               />
               <div className="flex gap-2">
                 {PROFILE_TYPES.map(pt => (
-                  <button
-                    key={pt.value}
-                    type="button"
-                    onClick={() => setNewProfileType(pt.value)}
+                  <button key={pt.value} type="button" onClick={() => setNewProfileType(pt.value)}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-all ${
                       newProfileType === pt.value ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
                     }`}
-                  >
-                    <span>{pt.icon}</span>
-                    <span>{t(pt.labelKey)}</span>
-                  </button>
+                  ><span>{pt.icon}</span><span>{t(pt.labelKey)}</span></button>
                 ))}
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setShowQuickCreate(false)} className="flex-1 py-2 rounded-lg text-xs text-muted-foreground bg-background">
-                  {t('general.cancel')}
-                </button>
-                <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">
-                  {t('profiles.save')}
-                </button>
+                <button type="button" onClick={() => setShowQuickCreate(false)} className="flex-1 py-2 rounded-lg text-xs text-muted-foreground bg-background">{t('general.cancel')}</button>
+                <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">{t('profiles.save')}</button>
               </div>
             </div>
           )}
@@ -271,10 +231,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
           <div className="grid grid-cols-3 gap-2">
             {categories.map(cat => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setCategory(cat.id)}
+              <button key={cat.id} type="button" onClick={() => setCategory(cat.id)}
                 className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${
                   category === cat.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                 }`}
@@ -287,28 +244,39 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         </div>
       )}
 
+      {/* Charge to credit card (expense only) */}
+      {type === 'expense' && creditAccounts.length > 0 && (
+        <div>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5 cursor-pointer">
+            <input type="checkbox" checked={chargeToCard} onChange={(e) => { setChargeToCard(e.target.checked); if (!e.target.checked) setCreditAccountId(''); }}
+              className="rounded border-border"
+            />
+            <CreditCard className="w-3.5 h-3.5" />
+            {t('transactions.chargeToCard')}
+          </label>
+          {chargeToCard && (
+            <div className="flex gap-2 flex-wrap">
+              {creditAccounts.map(ca => (
+                <button key={ca.id} type="button" onClick={() => setCreditAccountId(ca.id)}
+                  className={`px-3 py-2 rounded-lg text-sm transition-all ${creditAccountId === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                >💳 {ca.name}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Date */}
-      <Input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className="h-12 bg-secondary border-border/50 rounded-xl"
-      />
+      <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" />
 
       {/* Notes */}
-      <Textarea
-        placeholder={t('transactions.notes')}
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        className="bg-secondary border-border/50 rounded-xl resize-none"
-        rows={2}
+      <Textarea placeholder={t('transactions.notes')} value={notes} onChange={(e) => setNotes(e.target.value)}
+        className="bg-secondary border-border/50 rounded-xl resize-none" rows={2}
       />
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium text-muted-foreground bg-secondary">
-          {t('general.cancel')}
-        </button>
+        <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium text-muted-foreground bg-secondary">{t('general.cancel')}</button>
         <button type="submit" className="flex-1 py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground active:scale-95 transition-transform">
           {editTransaction ? t('transactions.update') : t('transactions.save')}
         </button>

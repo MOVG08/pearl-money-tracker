@@ -12,6 +12,7 @@ import AccountsPage from "./pages/AccountsPage";
 import AccountDetailPage from "./pages/AccountDetailPage";
 import ProfilesPage from "./pages/ProfilesPage";
 import ProfileDetailPage from "./pages/ProfileDetailPage";
+import CreditAccountDetailPage from "./pages/CreditAccountDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import BottomNav from "./components/BottomNav";
 import NotFound from "./pages/NotFound";
