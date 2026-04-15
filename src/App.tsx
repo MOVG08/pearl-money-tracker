@@ -42,6 +42,7 @@ const AppContent = () => {
           <Route path="/profiles/:id" element={<ProfileDetailPage />} />
           <Route path="/accounts" element={<AccountsPage />} />
           <Route path="/accounts/:id" element={<AccountDetailPage />} />
+          <Route path="/credit-accounts/:id" element={<CreditAccountDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
