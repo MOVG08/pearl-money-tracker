@@ -167,7 +167,8 @@ const DashboardPage: React.FC = () => {
             <Wallet className="w-8 h-8 opacity-60" />
           </div>
         </motion.div>
-      </div>
+        </div>
+      </section>
 
       {/* Balance line chart */}
       {balanceData.length > 1 && (
