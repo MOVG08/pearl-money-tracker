@@ -14,7 +14,7 @@ const formatCurrency = (amount: number) =>
 const AccountsPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { accounts, creditAccounts, addAccount, deleteAccount, addCreditAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance } = useData();
+  const { accounts, creditAccounts, addAccount, deleteAccount, addCreditAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<'cash' | 'bank' | 'savings' | 'other'>('bank');
@@ -30,6 +30,7 @@ const AccountsPage: React.FC = () => {
   const [cutOffDate, setCutOffDate] = useState('');
   const [paymentDueDate, setPaymentDueDate] = useState('');
   const [minMonthlySpend, setMinMonthlySpend] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [confirmCreditDelete, setConfirmCreditDelete] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,16 +43,18 @@ const AccountsPage: React.FC = () => {
   const handleCreditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!creditName) return;
+    const isCard = creditType === 'credit_card';
     addCreditAccount({
       name: creditName,
       credit_type: creditType,
       credit_limit: parseFloat(creditLimit) || 0,
       next_payment_date: nextPaymentDate || undefined,
-      cut_off_date: creditType === 'credit_card' ? (cutOffDate || undefined) : undefined,
-      payment_due_date: creditType === 'credit_card' ? (paymentDueDate || undefined) : undefined,
-      min_monthly_spend: creditType === 'credit_card' ? (parseFloat(minMonthlySpend) || 0) : 0,
+      cut_off_date: isCard ? (cutOffDate || undefined) : undefined,
+      payment_due_date: isCard ? (paymentDueDate || undefined) : undefined,
+      min_monthly_spend: isCard ? (parseFloat(minMonthlySpend) || 0) : 0,
+      start_date: !isCard ? (startDate || undefined) : undefined,
     });
-    setCreditName(''); setCreditLimit(''); setNextPaymentDate(''); setCutOffDate(''); setPaymentDueDate(''); setMinMonthlySpend('');
+    setCreditName(''); setCreditLimit(''); setNextPaymentDate(''); setCutOffDate(''); setPaymentDueDate(''); setMinMonthlySpend(''); setStartDate('');
     setShowCreditForm(false);
   };
 
