@@ -158,11 +158,11 @@ const TransactionsPage: React.FC = () => {
                       <div className="px-4 pb-3 pt-1 border-t border-border/50 space-y-1.5">
                         <p className="text-xs font-medium text-muted-foreground">{t('transactions.history')}</p>
                         {history.map(edit => (
-                          <div key={edit.id} className="text-xs text-muted-foreground flex gap-2">
-                            <span className="text-foreground/70 font-medium">{edit.field}</span>
-                            <span className="line-through text-destructive/60">{edit.old_value}</span>
+                          <div key={edit.id} className="text-xs text-muted-foreground flex flex-wrap gap-2 items-center">
+                            <span className="text-foreground/70 font-medium">{fieldLabel(edit.field)}</span>
+                            <span className="line-through text-destructive/60">{formatValue(edit.field, edit.old_value)}</span>
                             <span>→</span>
-                            <span className="text-success/80">{edit.new_value}</span>
+                            <span className="text-success/80">{formatValue(edit.field, edit.new_value)}</span>
                             <span className="ml-auto">{new Date(edit.edited_at).toLocaleString('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         ))}
