@@ -16,11 +16,11 @@ const formatCurrency = (amount: number) =>
 
 const DashboardPage: React.FC = () => {
   const { t, language } = useLanguage();
-  const { monthlyIncome, monthlyExpenses, balance, transactions, profiles } = useData();
+  const { monthlyIncome, monthlyExpenses, balance, transactions, profiles, accounts, getAccountBalance } = useData();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | null>(null);
+  const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | 'balance' | null>(null);
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -62,6 +62,18 @@ const DashboardPage: React.FC = () => {
     });
   }, [monthlyTx]);
 
+  const balanceByAccount = useMemo(() => {
+    const items = accounts.map(a => ({
+      accountId: a.id,
+      name: a.name,
+      value: getAccountBalance(a.id),
+    })).filter(i => i.value !== 0);
+    const total = items.reduce((s, i) => s + Math.abs(i.value), 0);
+    return items
+      .map(i => ({ ...i, pct: total > 0 ? Math.round((Math.abs(i.value) / total) * 100) : 0 }))
+      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  }, [accounts, transactions]);
+
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const cards = [
@@ -69,7 +81,7 @@ const DashboardPage: React.FC = () => {
     { key: 'expense' as const, label: t('dashboard.expenses'), value: monthlyExpenses, icon: TrendingDown, className: 'gradient-expense' },
   ];
 
-  const toggleCard = (key: 'income' | 'expense') => {
+  const toggleCard = (key: 'income' | 'expense' | 'balance') => {
     setExpandedCard(prev => prev === key ? null : key);
   };
 

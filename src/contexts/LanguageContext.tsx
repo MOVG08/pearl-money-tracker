@@ -40,6 +40,12 @@ const translations: Translations = {
   'dashboard.to': { es: 'Hasta', en: 'To' },
   'dashboard.history': { es: 'Historial', en: 'History' },
   'dashboard.tapToSee': { es: 'Toca para ver detalle', en: 'Tap to see details' },
+  'dashboard.balanceByAccount': { es: 'Balance por cuenta', en: 'Balance by account' },
+  // Sorting
+  'sort.label': { es: 'Ordenar por', en: 'Sort by' },
+  'sort.date': { es: 'Fecha', en: 'Date' },
+  'sort.created': { es: 'Creación', en: 'Created' },
+  'sort.modified': { es: 'Modificación', en: 'Modified' },
   // Transactions
   'transactions.title': { es: 'Movimientos', en: 'Transactions' },
   'transactions.add': { es: 'Agregar', en: 'Add' },
