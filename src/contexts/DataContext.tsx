@@ -24,12 +24,14 @@ interface DataContextType {
   addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Profile | null>;
   addCreditAccount: (ca: Omit<CreditAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateCreditAccount: (id: string, updates: Partial<Omit<CreditAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
   deleteCreditAccount: (id: string) => Promise<void>;
   getAccountBalance: (accountId: string) => number;
   getCreditAccountBalance: (creditAccountId: string) => { totalSpent: number; availableCredit: number; cycleSpent: number };
+  getLoanBalance: (creditAccountId: string) => { borrowed: number; paid: number; remaining: number };
   getEditHistory: (transactionId: string) => TransactionEdit[];
   monthlyIncome: number;
   monthlyExpenses: number;
@@ -100,11 +102,43 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
+      // Auto-roll TDC dates: when payment_due_date < today, advance both dates by 1 month
+      // payment_due_date <- next_payment_date; next_payment_date <- next_payment_date + 1 month
+      let creditAccountsData = (creditRes.data as CreditAccount[]) || [];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const addMonth = (iso: string) => {
+        const d = new Date(iso + 'T00:00:00');
+        d.setMonth(d.getMonth() + 1);
+        return d.toISOString().slice(0, 10);
+      };
+      const rollUpdates: Promise<any>[] = [];
+      creditAccountsData = creditAccountsData.map(ca => {
+        if (ca.credit_type !== 'credit_card') return ca;
+        let due = ca.payment_due_date;
+        let next = ca.next_payment_date;
+        if (!due || !next) return ca;
+        let changed = false;
+        // Loop in case multiple cycles passed
+        while (due && next && due < todayStr) {
+          due = next;
+          next = addMonth(next);
+          changed = true;
+        }
+        if (changed) {
+          rollUpdates.push(
+            Promise.resolve(supabase.from('credit_accounts').update({ payment_due_date: due, next_payment_date: next }).eq('id', ca.id))
+          );
+          return { ...ca, payment_due_date: due, next_payment_date: next };
+        }
+        return ca;
+      });
+      if (rollUpdates.length > 0) await Promise.all(rollUpdates);
+
       setTransactions(txData);
       setAccounts(accRes.data as Account[]);
       setProfiles(profilesData);
       setTransactionHistory(histRes.data as TransactionEdit[]);
-      setCreditAccounts((creditRes.data as CreditAccount[]) || []);
+      setCreditAccounts(creditAccountsData);
     } catch (err: any) {
       toast.error(err.message || 'Error fetching data');
     } finally {
@@ -192,6 +226,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCreditAccounts(prev => prev.filter(c => c.id !== id));
   };
 
+  const updateCreditAccount = async (id: string, updates: Partial<Omit<CreditAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
+    const { data, error } = await supabase
+      .from('credit_accounts')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return; }
+    setCreditAccounts(prev => prev.map(c => (c.id === id ? (data as CreditAccount) : c)));
+  };
+
+  const getLoanBalance = (creditAccountId: string) => {
+    const ca = creditAccounts.find(c => c.id === creditAccountId);
+    const borrowed = ca?.credit_limit ?? 0;
+    const txs = transactions.filter(t => t.credit_account_id === creditAccountId);
+    const paid = txs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
+    return { borrowed, paid, remaining: Math.max(0, borrowed - paid) };
+  };
+
   const getAccountBalance = (accountId: string) => {
     const account = accounts.find(a => a.id === accountId);
     const initial = account?.balance ?? 0;
@@ -259,7 +312,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
 
   return (
-    <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
+    <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, updateCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
       {children}
     </DataContext.Provider>
   );

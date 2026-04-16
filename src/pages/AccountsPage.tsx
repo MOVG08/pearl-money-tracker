@@ -14,7 +14,7 @@ const formatCurrency = (amount: number) =>
 const AccountsPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { accounts, creditAccounts, addAccount, deleteAccount, addCreditAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance } = useData();
+  const { accounts, creditAccounts, addAccount, deleteAccount, addCreditAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<'cash' | 'bank' | 'savings' | 'other'>('bank');
@@ -30,6 +30,7 @@ const AccountsPage: React.FC = () => {
   const [cutOffDate, setCutOffDate] = useState('');
   const [paymentDueDate, setPaymentDueDate] = useState('');
   const [minMonthlySpend, setMinMonthlySpend] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [confirmCreditDelete, setConfirmCreditDelete] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,16 +43,18 @@ const AccountsPage: React.FC = () => {
   const handleCreditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!creditName) return;
+    const isCard = creditType === 'credit_card';
     addCreditAccount({
       name: creditName,
       credit_type: creditType,
       credit_limit: parseFloat(creditLimit) || 0,
       next_payment_date: nextPaymentDate || undefined,
-      cut_off_date: creditType === 'credit_card' ? (cutOffDate || undefined) : undefined,
-      payment_due_date: creditType === 'credit_card' ? (paymentDueDate || undefined) : undefined,
-      min_monthly_spend: creditType === 'credit_card' ? (parseFloat(minMonthlySpend) || 0) : 0,
+      cut_off_date: isCard ? (cutOffDate || undefined) : undefined,
+      payment_due_date: isCard ? (paymentDueDate || undefined) : undefined,
+      min_monthly_spend: isCard ? (parseFloat(minMonthlySpend) || 0) : 0,
+      start_date: !isCard ? (startDate || undefined) : undefined,
     });
-    setCreditName(''); setCreditLimit(''); setNextPaymentDate(''); setCutOffDate(''); setPaymentDueDate(''); setMinMonthlySpend('');
+    setCreditName(''); setCreditLimit(''); setNextPaymentDate(''); setCutOffDate(''); setPaymentDueDate(''); setMinMonthlySpend(''); setStartDate('');
     setShowCreditForm(false);
   };
 
@@ -165,7 +168,7 @@ const AccountsPage: React.FC = () => {
               <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.nextPayment')}</label>
               <Input type="date" value={nextPaymentDate} onChange={(e) => setNextPaymentDate(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" />
             </div>
-            {creditType === 'credit_card' && (
+            {creditType === 'credit_card' ? (
               <>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.cutOffDate')}</label>
@@ -180,6 +183,11 @@ const AccountsPage: React.FC = () => {
                   className="h-12 bg-secondary border-border/50 rounded-xl font-mono"
                 />
               </>
+            ) : (
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.startDate')}</label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" />
+              </div>
             )}
             <button type="submit" className="w-full py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground active:scale-95 transition-transform">{t('credit.save')}</button>
           </motion.form>
@@ -195,8 +203,11 @@ const AccountsPage: React.FC = () => {
           <div className="space-y-2">
             {creditAccounts.map((ca, i) => {
               const ct = CREDIT_TYPES.find(c => c.value === ca.credit_type);
-              const { totalSpent, availableCredit, cycleSpent } = getCreditAccountBalance(ca.id);
-              const minSpendPct = ca.min_monthly_spend > 0 ? Math.min(100, (cycleSpent / ca.min_monthly_spend) * 100) : 0;
+              const isCard = ca.credit_type === 'credit_card';
+              const cardBal = isCard ? getCreditAccountBalance(ca.id) : null;
+              const loanBal = !isCard ? getLoanBalance(ca.id) : null;
+              const minSpendPct = isCard && ca.min_monthly_spend > 0 && cardBal
+                ? Math.min(100, (cardBal.cycleSpent / ca.min_monthly_spend) * 100) : 0;
 
               return (
                 <motion.div key={ca.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -212,22 +223,35 @@ const AccountsPage: React.FC = () => {
                       <p className="text-xs text-muted-foreground">{ct ? t(ct.labelKey) : ca.credit_type}</p>
                     </div>
                     <div className="text-right mr-2">
-                      <p className="font-mono text-sm font-medium text-foreground">{formatCurrency(availableCredit)}</p>
-                      <p className="text-xs text-muted-foreground">{t('credit.availableCredit')}</p>
+                      <p className="font-mono text-sm font-medium text-foreground">
+                        {formatCurrency(isCard ? cardBal!.availableCredit : loanBal!.remaining)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isCard ? t('credit.availableCredit') : t('credit.remaining')}
+                      </p>
                     </div>
                     <button onClick={(e) => handleCreditDelete(ca.id, e)}
                       className={`p-2 rounded-lg transition-colors ${confirmCreditDelete === ca.id ? 'bg-destructive text-destructive-foreground' : 'text-muted-foreground hover:text-destructive'}`}
                     ><Trash2 className="w-4 h-4" /></button>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{t('credit.totalSpent')}: {formatCurrency(totalSpent)}</span>
-                    <span>{t('credit.creditLimit')}: {formatCurrency(ca.credit_limit)}</span>
+                    {isCard ? (
+                      <>
+                        <span>{t('credit.totalSpent')}: {formatCurrency(cardBal!.totalSpent)}</span>
+                        <span>{t('credit.creditLimit')}: {formatCurrency(ca.credit_limit)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{t('credit.borrowed')}: {formatCurrency(loanBal!.borrowed)}</span>
+                        <span>{t('credit.paid')}: {formatCurrency(loanBal!.paid)}</span>
+                      </>
+                    )}
                   </div>
-                  {ca.credit_type === 'credit_card' && ca.min_monthly_spend > 0 && (
+                  {isCard && ca.min_monthly_spend > 0 && (
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{t('credit.minSpendProgress')}</span>
-                        <span>{formatCurrency(cycleSpent)} / {formatCurrency(ca.min_monthly_spend)}</span>
+                        <span>{formatCurrency(cardBal!.cycleSpent)} / {formatCurrency(ca.min_monthly_spend)}</span>
                       </div>
                       <Progress value={minSpendPct} className="h-2" />
                     </div>
