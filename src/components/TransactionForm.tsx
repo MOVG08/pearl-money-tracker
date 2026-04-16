@@ -304,7 +304,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Card payment target (when paying a credit card from a regular account) */}
-      {type === 'expense' && category === 'card_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
+      {type === 'expense' && category === 'debt_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1">
             <CreditCard className="w-3 h-3" /> {t('transactions.payToCard')}
