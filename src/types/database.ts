@@ -33,7 +33,7 @@ export interface Profile {
   id: string;
   user_id: string;
   name: string;
-  type: 'person' | 'business';
+  type: 'person' | 'business' | 'bank';
   created_at: string;
   updated_at: string;
 }
@@ -41,7 +41,7 @@ export interface Profile {
 export interface Transaction {
   id: string;
   user_id: string;
-  account_id: string;
+  account_id?: string | null;
   destination_account_id?: string;
   credit_account_id?: string;
   profile_id?: string;
@@ -108,4 +108,5 @@ export const CREDIT_TYPES = [
 export const PROFILE_TYPES = [
   { value: 'person' as const, labelKey: 'profileType.person', icon: '👤' },
   { value: 'business' as const, labelKey: 'profileType.business', icon: '🏢' },
+  { value: 'bank' as const, labelKey: 'profileType.bank', icon: '🏦' },
 ];

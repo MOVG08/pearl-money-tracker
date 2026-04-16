@@ -27,8 +27,8 @@ const CreditAccountDetailPage: React.FC = () => {
   }
 
   const ct = CREDIT_TYPES.find(c => c.value === creditAccount.credit_type);
-  const { totalSpent, availableCredit, monthlySpent } = getCreditAccountBalance(creditAccount.id);
-  const minSpendPct = creditAccount.min_monthly_spend > 0 ? Math.min(100, (monthlySpent / creditAccount.min_monthly_spend) * 100) : 0;
+  const { totalSpent, availableCredit, cycleSpent } = getCreditAccountBalance(creditAccount.id);
+  const minSpendPct = creditAccount.min_monthly_spend > 0 ? Math.min(100, (cycleSpent / creditAccount.min_monthly_spend) * 100) : 0;
 
   const creditTxs = transactions.filter(tx => tx.credit_account_id === id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
@@ -82,7 +82,7 @@ const CreditAccountDetailPage: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t('credit.minSpendProgress')}</span>
-                <span className="text-foreground font-mono">{formatCurrency(monthlySpent)} / {formatCurrency(creditAccount.min_monthly_spend)}</span>
+                <span className="text-foreground font-mono">{formatCurrency(cycleSpent)} / {formatCurrency(creditAccount.min_monthly_spend)}</span>
               </div>
               <Progress value={minSpendPct} className="h-2.5" />
             </div>

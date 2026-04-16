@@ -21,7 +21,7 @@ interface DataContextType {
   deleteAccount: (id: string) => Promise<void>;
   deleteCreditAccount: (id: string) => Promise<void>;
   getAccountBalance: (accountId: string) => number;
-  getCreditAccountBalance: (creditAccountId: string) => { totalSpent: number; availableCredit: number; monthlySpent: number };
+  getCreditAccountBalance: (creditAccountId: string) => { totalSpent: number; availableCredit: number; cycleSpent: number };
   getEditHistory: (transactionId: string) => TransactionEdit[];
   monthlyIncome: number;
   monthlyExpenses: number;
@@ -166,12 +166,33 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const totalSpent = charges - payments;
 
     const now = new Date();
-    const monthlyCharges = creditTxs.filter(t => {
+    let cycleStart: Date;
+    let cycleEnd: Date;
+
+    if (ca?.cut_off_date && ca.credit_type === 'credit_card') {
+      const cutDay = new Date(ca.cut_off_date).getUTCDate();
+      const today = now.getDate();
+      if (today <= cutDay) {
+        // Cycle: (prev month cut + 1) ... (this month cut)
+        cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, cutDay + 1);
+        cycleEnd = new Date(now.getFullYear(), now.getMonth(), cutDay, 23, 59, 59);
+      } else {
+        // Cycle: (this month cut + 1) ... (next month cut)
+        cycleStart = new Date(now.getFullYear(), now.getMonth(), cutDay + 1);
+        cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, cutDay, 23, 59, 59);
+      }
+    } else {
+      cycleStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    }
+
+    const cycleSpent = creditTxs.filter(t => {
+      if (t.category === 'card_payment') return false;
       const d = new Date(t.date);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && t.category !== 'card_payment';
+      return d >= cycleStart && d <= cycleEnd;
     }).reduce((s, t) => s + t.amount, 0);
 
-    return { totalSpent: Math.max(0, totalSpent), availableCredit: limit - Math.max(0, totalSpent), monthlySpent: monthlyCharges };
+    return { totalSpent: Math.max(0, totalSpent), availableCredit: limit - Math.max(0, totalSpent), cycleSpent };
   };
 
   const getEditHistory = (transactionId: string) => transactionHistory.filter(h => h.transaction_id === transactionId);
