@@ -46,7 +46,7 @@ const DashboardPage: React.FC = () => {
       const profile = profiles.find(p => p.id === id);
       return {
         profileId: profile ? profile.id : null,
-        name: profile?.name || t('dashboard.noProfile'),
+        name: !profile || profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name,
         value,
         pct: total > 0 ? Math.round((value / total) * 100) : 0,
       };
