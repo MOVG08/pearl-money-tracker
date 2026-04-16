@@ -23,7 +23,7 @@ const ProfilesPage: React.FC = () => {
   const { profiles, transactions, addProfile, deleteProfile } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
-  const [type, setType] = useState<'person' | 'business'>('person');
+  const [type, setType] = useState<'person' | 'business' | 'bank'>('person');
   const [showCannotDelete, setShowCannotDelete] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,7 +107,7 @@ const ProfilesPage: React.FC = () => {
               onClick={() => navigate(`/profiles/${profile.id}`)}
               className="flex items-center gap-3 p-4 rounded-xl bg-card border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
             >
-              <span className="text-2xl">{profile.type === 'person' ? '👤' : '🏢'}</span>
+              <span className="text-2xl">{PROFILE_TYPES.find(pt => pt.value === profile.type)?.icon || '👤'}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
                 <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>

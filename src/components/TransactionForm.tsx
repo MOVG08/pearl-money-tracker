@@ -19,19 +19,22 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [type, setType] = useState<TransactionType>(editTransaction?.type || 'expense');
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
   const [category, setCategory] = useState(editTransaction?.category || '');
-  const [accountId, setAccountId] = useState(editTransaction?.account_id || accounts[0]?.id || '');
+  // Unified source: either an account_id or a credit_account_id (mutually exclusive)
+  const initialSource: { kind: 'account' | 'credit'; id: string } =
+    editTransaction?.credit_account_id
+      ? { kind: 'credit', id: editTransaction.credit_account_id }
+      : { kind: 'account', id: editTransaction?.account_id || accounts[0]?.id || '' };
+  const [source, setSource] = useState(initialSource);
   const [destinationAccountId, setDestinationAccountId] = useState(editTransaction?.destination_account_id || '');
-  const [creditAccountId, setCreditAccountId] = useState(editTransaction?.credit_account_id || '');
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
-  const [chargeToCard, setChargeToCard] = useState(!!editTransaction?.credit_account_id);
 
   const [profileSearch, setProfileSearch] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
-  const [newProfileType, setNewProfileType] = useState<'person' | 'business'>('person');
+  const [newProfileType, setNewProfileType] = useState<'person' | 'business' | 'bank'>('person');
 
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
@@ -42,6 +45,8 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   }, [profiles, profileSearch]);
 
   const selectedProfile = profiles.find(p => p.id === profileId);
+  const accountId = source.kind === 'account' ? source.id : '';
+  const creditAccountId = source.kind === 'credit' ? source.id : '';
   const destinationAccounts = useMemo(() => accounts.filter(a => a.id !== accountId), [accounts, accountId]);
 
   if (accounts.length === 0) {
@@ -68,18 +73,20 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !accountId) return;
-    if (type === 'transfer' && !destinationAccountId) return;
+    if (!amount) return;
+    if (type === 'transfer' && (!accountId || !destinationAccountId)) return;
     if (type !== 'transfer' && !category) return;
+    if (type !== 'expense' && !accountId) return; // income/transfer must use a regular account
+    if (type === 'expense' && !accountId && !creditAccountId) return;
 
     const txData: any = {
       type,
       amount: parseFloat(amount),
       category: type === 'transfer' ? 'transfer' : category,
-      account_id: accountId,
+      account_id: source.kind === 'account' ? accountId : null,
       profile_id: profileId || undefined,
       destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
-      credit_account_id: (type === 'expense' && chargeToCard && creditAccountId) ? creditAccountId : undefined,
+      credit_account_id: source.kind === 'credit' ? creditAccountId : undefined,
       date,
       notes: notes || undefined,
     };
@@ -101,7 +108,16 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
             <button
               key={t_type}
               type="button"
-              onClick={() => { setType(t_type); if (!editTransaction) { setCategory(''); setCreditAccountId(''); setChargeToCard(false); } }}
+              onClick={() => {
+                setType(t_type);
+                if (!editTransaction) {
+                  setCategory('');
+                  // Reset to a regular account for non-expense types
+                  if (t_type !== 'expense' && source.kind === 'credit') {
+                    setSource({ kind: 'account', id: accounts[0]?.id || '' });
+                  }
+                }
+              }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 type === t_type
                   ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground'
@@ -126,18 +142,41 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         className="h-14 text-2xl font-mono text-center bg-secondary border-border/50 rounded-xl" required
       />
 
-      {/* Source Account */}
+      {/* Source Account (regular accounts + credit accounts for expenses) */}
       <div>
         <label className="text-xs text-muted-foreground mb-1.5 block">
-          {type === 'transfer' ? t('transactions.sourceAccount') : t('transactions.account')}
+          {t('transactions.sourceAccount')}
         </label>
-        <div className="flex gap-2 flex-wrap">
-          {accounts.map(acc => (
-            <button key={acc.id} type="button"
-              onClick={() => { setAccountId(acc.id); if (destinationAccountId === acc.id) setDestinationAccountId(''); }}
-              className={`px-3 py-2 rounded-lg text-sm transition-all ${accountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-            >{acc.name}</button>
-          ))}
+        <div className="space-y-2">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mb-1">{t('transactions.account')}</p>
+            <div className="flex gap-2 flex-wrap">
+              {accounts.map(acc => (
+                <button key={acc.id} type="button"
+                  onClick={() => {
+                    setSource({ kind: 'account', id: acc.id });
+                    if (destinationAccountId === acc.id) setDestinationAccountId('');
+                  }}
+                  className={`px-3 py-2 rounded-lg text-sm transition-all ${source.kind === 'account' && source.id === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                >{acc.name}</button>
+              ))}
+            </div>
+          </div>
+          {type === 'expense' && creditAccounts.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mb-1 flex items-center gap-1">
+                <CreditCard className="w-3 h-3" /> {t('credit.title')}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {creditAccounts.map(ca => (
+                  <button key={ca.id} type="button"
+                    onClick={() => setSource({ kind: 'credit', id: ca.id })}
+                    className={`px-3 py-2 rounded-lg text-sm transition-all ${source.kind === 'credit' && source.id === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                  >💳 {ca.name}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -165,7 +204,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
-              <span className="text-sm">{selectedProfile.type === 'person' ? '👤' : '🏢'}</span>
+              <span className="text-sm">{PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.icon || '👤'}</span>
               <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
               <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
@@ -188,7 +227,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                       onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                     >
-                      <span>{p.type === 'person' ? '👤' : '🏢'}</span><span>{p.name}</span>
+                      <span>{PROFILE_TYPES.find(pt => pt.value === p.type)?.icon || '👤'}</span><span>{p.name}</span>
                     </button>
                   ))}
                   <button type="button"
@@ -241,28 +280,6 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Charge to credit card (expense only) */}
-      {type === 'expense' && creditAccounts.length > 0 && (
-        <div>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5 cursor-pointer">
-            <input type="checkbox" checked={chargeToCard} onChange={(e) => { setChargeToCard(e.target.checked); if (!e.target.checked) setCreditAccountId(''); }}
-              className="rounded border-border"
-            />
-            <CreditCard className="w-3.5 h-3.5" />
-            {t('transactions.chargeToCard')}
-          </label>
-          {chargeToCard && (
-            <div className="flex gap-2 flex-wrap">
-              {creditAccounts.map(ca => (
-                <button key={ca.id} type="button" onClick={() => setCreditAccountId(ca.id)}
-                  className={`px-3 py-2 rounded-lg text-sm transition-all ${creditAccountId === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-                >💳 {ca.name}</button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 

@@ -188,8 +188,8 @@ const AccountsPage: React.FC = () => {
           <div className="space-y-2">
             {creditAccounts.map((ca, i) => {
               const ct = CREDIT_TYPES.find(c => c.value === ca.credit_type);
-              const { totalSpent, availableCredit, monthlySpent } = getCreditAccountBalance(ca.id);
-              const minSpendPct = ca.min_monthly_spend > 0 ? Math.min(100, (monthlySpent / ca.min_monthly_spend) * 100) : 0;
+              const { totalSpent, availableCredit, cycleSpent } = getCreditAccountBalance(ca.id);
+              const minSpendPct = ca.min_monthly_spend > 0 ? Math.min(100, (cycleSpent / ca.min_monthly_spend) * 100) : 0;
 
               return (
                 <motion.div key={ca.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -218,7 +218,7 @@ const AccountsPage: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{t('credit.minSpendProgress')}</span>
-                        <span>{formatCurrency(monthlySpent)} / {formatCurrency(ca.min_monthly_spend)}</span>
+                        <span>{formatCurrency(cycleSpent)} / {formatCurrency(ca.min_monthly_spend)}</span>
                       </div>
                       <Progress value={minSpendPct} className="h-2" />
                     </div>

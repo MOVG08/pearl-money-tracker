@@ -88,6 +88,7 @@ const translations: Translations = {
   // Profile types
   'profileType.person': { es: 'Persona', en: 'Person' },
   'profileType.business': { es: 'Empresa', en: 'Business' },
+  'profileType.bank': { es: 'Banco', en: 'Bank' },
   // Profiles
   'profiles.title': { es: 'Perfiles', en: 'Profiles' },
   'profiles.add': { es: 'Nuevo perfil', en: 'New profile' },

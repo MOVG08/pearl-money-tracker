@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/database';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES } from '@/types/database';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
@@ -44,7 +44,7 @@ const ProfileDetailPage: React.FC = () => {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{profile.type === 'person' ? '👤' : '🏢'}</span>
+          <span className="text-2xl">{PROFILE_TYPES.find(pt => pt.value === profile.type)?.icon || '👤'}</span>
           <div>
             <h1 className="text-xl font-semibold text-foreground">{profile.name}</h1>
             <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
