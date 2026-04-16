@@ -83,7 +83,7 @@ const TransactionsPage: React.FC = () => {
                       <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
                       {!isTransfer && acc && <span>• {acc.name}</span>}
                       {!isTransfer && !acc && creditAcc && <span>• 💳 {creditAcc.name}</span>}
-                      {profile && <span>• {profile.name}</span>}
+                      {profile && <span>• {profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</span>}
                       {acc && creditAcc && <span>• 💳 {creditAcc.name}</span>}
                     </div>
                     {tx.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{tx.notes}</p>}

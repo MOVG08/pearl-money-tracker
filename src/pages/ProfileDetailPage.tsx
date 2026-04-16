@@ -46,7 +46,7 @@ const ProfileDetailPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="text-2xl">{PROFILE_TYPES.find(pt => pt.value === profile.type)?.icon || '👤'}</span>
           <div>
-            <h1 className="text-xl font-semibold text-foreground">{profile.name}</h1>
+            <h1 className="text-xl font-semibold text-foreground">{profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</h1>
             <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
           </div>
         </div>

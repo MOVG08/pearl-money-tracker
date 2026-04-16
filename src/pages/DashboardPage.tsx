@@ -227,7 +227,7 @@ const DashboardPage: React.FC = () => {
                   <p className="text-sm font-medium text-foreground truncate">{cat?.name || tx.category}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
-                    {profile && <span>• {profile.name}</span>}
+                    {profile && <span>• {profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</span>}
                   </div>
                 </div>
                 <span className={`font-mono text-sm font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
