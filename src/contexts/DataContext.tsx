@@ -121,7 +121,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addTransaction = async (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
-    const { data, error } = await supabase.from('transactions').insert({ ...tx, user_id: user.id }).select().single();
+    const profile_id = tx.profile_id || defaultProfileId || undefined;
+    const { data, error } = await supabase.from('transactions').insert({ ...tx, profile_id, user_id: user.id }).select().single();
     if (error) { toast.error(error.message); return; }
     setTransactions(prev => [data as Transaction, ...prev]);
   };
@@ -258,7 +259,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
 
   return (
-    <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
+    <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
       {children}
     </DataContext.Provider>
   );
