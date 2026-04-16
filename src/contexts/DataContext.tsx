@@ -4,6 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Transaction, Account, Profile, TransactionEdit, CreditAccount } from '@/types/database';
 import { toast } from 'sonner';
 
+// Sentinel name for the auto-created per-user "no profile" bucket.
+// Kept hidden from regular profile lists; rendered as the localized "Sin perfil" label.
+export const DEFAULT_PROFILE_SENTINEL = '__default_no_profile__';
+
+export const isDefaultProfile = (p: Pick<Profile, 'name'> | undefined | null) =>
+  !!p && p.name === DEFAULT_PROFILE_SENTINEL;
+
 interface DataContextType {
   transactions: Transaction[];
   accounts: Account[];
@@ -11,6 +18,7 @@ interface DataContextType {
   creditAccounts: CreditAccount[];
   transactionHistory: TransactionEdit[];
   loading: boolean;
+  defaultProfileId: string | null;
   addTransaction: (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => Promise<void>;
   addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
@@ -61,9 +69,40 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // credit_accounts table may not exist yet
       if (creditRes.error && !creditRes.error.message.includes('does not exist')) throw creditRes.error;
 
-      setTransactions(txRes.data as Transaction[]);
+      let profilesData = (profRes.data as Profile[]) || [];
+      let txData = (txRes.data as Transaction[]) || [];
+
+      // Ensure a default "no profile" bucket exists for this user
+      let defaultProfile = profilesData.find(p => p.name === DEFAULT_PROFILE_SENTINEL);
+      if (!defaultProfile) {
+        const { data: created, error: createErr } = await supabase
+          .from('profiles')
+          .insert({ name: DEFAULT_PROFILE_SENTINEL, type: 'person', user_id: user.id })
+          .select()
+          .single();
+        if (!createErr && created) {
+          defaultProfile = created as Profile;
+          profilesData = [...profilesData, defaultProfile];
+        }
+      }
+
+      // Backfill: any transactions without profile_id get assigned to the default profile
+      if (defaultProfile) {
+        const orphanIds = txData.filter(t => !t.profile_id).map(t => t.id);
+        if (orphanIds.length > 0) {
+          const { error: backfillErr } = await supabase
+            .from('transactions')
+            .update({ profile_id: defaultProfile.id })
+            .in('id', orphanIds);
+          if (!backfillErr) {
+            txData = txData.map(t => (!t.profile_id ? { ...t, profile_id: defaultProfile!.id } : t));
+          }
+        }
+      }
+
+      setTransactions(txData);
       setAccounts(accRes.data as Account[]);
-      setProfiles(profRes.data as Profile[]);
+      setProfiles(profilesData);
       setTransactionHistory(histRes.data as TransactionEdit[]);
       setCreditAccounts((creditRes.data as CreditAccount[]) || []);
     } catch (err: any) {
@@ -74,6 +113,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const defaultProfileId = useMemo(
+    () => profiles.find(p => p.name === DEFAULT_PROFILE_SENTINEL)?.id ?? null,
+    [profiles]
+  );
 
   const addTransaction = async (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
