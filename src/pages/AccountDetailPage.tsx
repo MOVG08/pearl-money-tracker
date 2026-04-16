@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Folder } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, ACCOUNT_TYPES } from '@/types/database';
 import { format } from 'date-fns';
@@ -83,7 +83,9 @@ const AccountDetailPage: React.FC = () => {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{accountType?.icon || '📁'}</span>
+          <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground">
+            {(() => { const Icon = accountType?.Icon ?? Folder; return <Icon className="w-5 h-5" />; })()}
+          </span>
           <div>
             <h1 className="text-xl font-semibold text-foreground">{account.name}</h1>
             <p className="text-xs text-muted-foreground">{accountType ? t(accountType.labelKey) : account.type}</p>
