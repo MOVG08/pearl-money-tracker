@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useData } from '@/contexts/DataContext';
+import { useData, DEFAULT_PROFILE_SENTINEL } from '@/contexts/DataContext';
 import { PROFILE_TYPES } from '@/types/database';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -21,6 +21,10 @@ const ProfilesPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { profiles, transactions, addProfile, deleteProfile } = useData();
+  const visibleProfiles = useMemo(
+    () => profiles.filter(p => p.name !== DEFAULT_PROFILE_SENTINEL),
+    [profiles]
+  );
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<'person' | 'business' | 'bank'>('person');
@@ -93,7 +97,7 @@ const ProfilesPage: React.FC = () => {
         </form>
       )}
 
-      {profiles.length === 0 ? (
+      {visibleProfiles.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <Users className="w-12 h-12 text-muted-foreground mx-auto" />
           <p className="text-foreground font-medium">{t('profiles.noProfiles')}</p>
@@ -101,7 +105,7 @@ const ProfilesPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {profiles.map(profile => (
+          {visibleProfiles.map(profile => (
             <Card
               key={profile.id}
               onClick={() => navigate(`/profiles/${profile.id}`)}
