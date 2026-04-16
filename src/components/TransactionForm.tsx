@@ -31,7 +31,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [notes, setNotes] = useState(editTransaction?.notes || '');
   // For card_payment expenses paid from a regular account: which credit card to apply payment to
   const [paymentCardId, setPaymentCardId] = useState(
-    editTransaction && editTransaction.category === 'card_payment' && editTransaction.account_id
+    editTransaction && (editTransaction.category === 'debt_payment' || editTransaction.category === 'card_payment') && editTransaction.account_id
       ? editTransaction.credit_account_id || ''
       : ''
   );
