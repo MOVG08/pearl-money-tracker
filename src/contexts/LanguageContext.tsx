@@ -86,6 +86,7 @@ const translations: Translations = {
   'accountType.cash': { es: 'Efectivo', en: 'Cash' },
   'accountType.bank': { es: 'Banco', en: 'Bank' },
   'accountType.savings': { es: 'Ahorros', en: 'Savings' },
+  'accountType.investment': { es: 'Inversión', en: 'Investment' },
   'accountType.other': { es: 'Otro', en: 'Other' },
   // Profile types
   'profileType.person': { es: 'Persona', en: 'Person' },
