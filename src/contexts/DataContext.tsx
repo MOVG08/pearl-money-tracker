@@ -301,7 +301,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const cycleSpent = creditTxs.filter(t => {
-      if (t.category === 'card_payment') return false;
+      if (isDebtPayment(t.category)) return false;
       const d = (t.date || '').slice(0, 10);
       return d >= cycleStartIso && d <= cycleEndIso;
     }).reduce((s, t) => s + t.amount, 0);
