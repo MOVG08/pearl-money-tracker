@@ -5,7 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionT
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus, X, CreditCard } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
