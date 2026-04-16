@@ -261,8 +261,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const ca = creditAccounts.find(c => c.id === creditAccountId);
     const limit = ca?.credit_limit ?? 0;
     const creditTxs = transactions.filter(t => t.credit_account_id === creditAccountId);
-    const charges = creditTxs.filter(t => t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0);
-    const payments = creditTxs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
+    const charges = creditTxs.filter(t => !isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
+    const payments = creditTxs.filter(t => isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
     const totalSpent = charges - payments;
 
     // Compute current billing cycle window using date strings (YYYY-MM-DD) to avoid TZ issues.
