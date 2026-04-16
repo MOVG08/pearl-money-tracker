@@ -23,6 +23,16 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const prevUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    const wasLoggedOut = prevUserId.current === null;
+    if (user && wasLoggedOut) {
+      navigate('/', { replace: true });
+    }
+    prevUserId.current = user?.id ?? null;
+  }, [user, navigate]);
 
   if (loading) {
     return (
