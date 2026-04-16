@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import TransactionsPage from "./pages/TransactionsPage";
@@ -54,18 +55,20 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Sonner />
-      <LanguageProvider>
-        <AuthProvider>
-          <DataProvider>
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </DataProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Sonner />
+        <LanguageProvider>
+          <AuthProvider>
+            <DataProvider>
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </DataProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
