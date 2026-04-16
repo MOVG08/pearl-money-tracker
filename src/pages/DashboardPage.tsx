@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/database';
@@ -13,8 +14,9 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 
 const DashboardPage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { monthlyIncome, monthlyExpenses, balance, transactions, profiles } = useData();
+  const { user } = useAuth();
 
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | null>(null);
 
@@ -68,15 +70,24 @@ const DashboardPage: React.FC = () => {
     setExpandedCard(prev => prev === key ? null : key);
   };
 
+  const userName = user?.name || user?.email?.split('@')[0] || '';
+  const dateLocale = language === 'es' ? 'es-MX' : 'en-US';
+  const todayLabel = now.toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' });
+
   return (
     <div className="space-y-5 pb-24">
-      <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">{t('dashboard.thisMonth')}</p>
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">{t('dashboard.overview')}</h1>
-      </div>
+      {/* Hero header — date, greeting, summary */}
+      <section className="min-h-[55vh] flex flex-col justify-between gap-5 pt-2">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">{todayLabel}</p>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            {t('dashboard.hello')}{userName ? `, ${userName}` : ''}
+          </h1>
+          <p className="text-sm text-muted-foreground pt-1">{t('dashboard.thisMonth')} · {t('dashboard.overview')}</p>
+        </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 gap-3">
+        {/* Summary cards */}
+        <div className="grid grid-cols-1 gap-3">
         {cards.map((card, i) => {
           const isExpanded = expandedCard === card.key;
           const chartData = groupByProfile(card.key);
@@ -156,7 +167,8 @@ const DashboardPage: React.FC = () => {
             <Wallet className="w-8 h-8 opacity-60" />
           </div>
         </motion.div>
-      </div>
+        </div>
+      </section>
 
       {/* Balance line chart */}
       {balanceData.length > 1 && (
