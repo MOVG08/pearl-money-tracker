@@ -5,7 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionT
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X, CreditCard } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -19,19 +19,22 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [type, setType] = useState<TransactionType>(editTransaction?.type || 'expense');
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
   const [category, setCategory] = useState(editTransaction?.category || '');
-  const [accountId, setAccountId] = useState(editTransaction?.account_id || accounts[0]?.id || '');
+  // Unified source: either an account_id or a credit_account_id (mutually exclusive)
+  const initialSource: { kind: 'account' | 'credit'; id: string } =
+    editTransaction?.credit_account_id
+      ? { kind: 'credit', id: editTransaction.credit_account_id }
+      : { kind: 'account', id: editTransaction?.account_id || accounts[0]?.id || '' };
+  const [source, setSource] = useState(initialSource);
   const [destinationAccountId, setDestinationAccountId] = useState(editTransaction?.destination_account_id || '');
-  const [creditAccountId, setCreditAccountId] = useState(editTransaction?.credit_account_id || '');
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
-  const [chargeToCard, setChargeToCard] = useState(!!editTransaction?.credit_account_id);
 
   const [profileSearch, setProfileSearch] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
-  const [newProfileType, setNewProfileType] = useState<'person' | 'business'>('person');
+  const [newProfileType, setNewProfileType] = useState<'person' | 'business' | 'bank'>('person');
 
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
