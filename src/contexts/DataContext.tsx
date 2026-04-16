@@ -312,7 +312,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
 
   return (
-    <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
+    <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, updateCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
       {children}
     </DataContext.Provider>
   );
