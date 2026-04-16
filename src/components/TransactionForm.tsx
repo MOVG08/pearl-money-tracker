@@ -91,7 +91,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     // - else if category is card_payment and a card is selected: attribute payment to it
     let finalCreditAccountId: string | undefined;
     if (source.kind === 'credit') finalCreditAccountId = creditAccountId;
-    else if (type === 'expense' && category === 'card_payment' && paymentCardId) finalCreditAccountId = paymentCardId;
+    else if (type === 'expense' && category === 'debt_payment' && paymentCardId) finalCreditAccountId = paymentCardId;
 
     const txData: any = {
       type,
