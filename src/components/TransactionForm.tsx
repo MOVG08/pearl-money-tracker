@@ -204,7 +204,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
-              <span className="text-sm">{selectedProfile.type === 'person' ? '👤' : '🏢'}</span>
+              <span className="text-sm">{PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.icon || '👤'}</span>
               <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
               <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
@@ -227,7 +227,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                       onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                     >
-                      <span>{p.type === 'person' ? '👤' : '🏢'}</span><span>{p.name}</span>
+                      <span>{PROFILE_TYPES.find(pt => pt.value === p.type)?.icon || '👤'}</span><span>{p.name}</span>
                     </button>
                   ))}
                   <button type="button"
