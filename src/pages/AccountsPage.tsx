@@ -203,8 +203,11 @@ const AccountsPage: React.FC = () => {
           <div className="space-y-2">
             {creditAccounts.map((ca, i) => {
               const ct = CREDIT_TYPES.find(c => c.value === ca.credit_type);
-              const { totalSpent, availableCredit, cycleSpent } = getCreditAccountBalance(ca.id);
-              const minSpendPct = ca.min_monthly_spend > 0 ? Math.min(100, (cycleSpent / ca.min_monthly_spend) * 100) : 0;
+              const isCard = ca.credit_type === 'credit_card';
+              const cardBal = isCard ? getCreditAccountBalance(ca.id) : null;
+              const loanBal = !isCard ? getLoanBalance(ca.id) : null;
+              const minSpendPct = isCard && ca.min_monthly_spend > 0 && cardBal
+                ? Math.min(100, (cardBal.cycleSpent / ca.min_monthly_spend) * 100) : 0;
 
               return (
                 <motion.div key={ca.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -220,22 +223,35 @@ const AccountsPage: React.FC = () => {
                       <p className="text-xs text-muted-foreground">{ct ? t(ct.labelKey) : ca.credit_type}</p>
                     </div>
                     <div className="text-right mr-2">
-                      <p className="font-mono text-sm font-medium text-foreground">{formatCurrency(availableCredit)}</p>
-                      <p className="text-xs text-muted-foreground">{t('credit.availableCredit')}</p>
+                      <p className="font-mono text-sm font-medium text-foreground">
+                        {formatCurrency(isCard ? cardBal!.availableCredit : loanBal!.remaining)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isCard ? t('credit.availableCredit') : t('credit.remaining')}
+                      </p>
                     </div>
                     <button onClick={(e) => handleCreditDelete(ca.id, e)}
                       className={`p-2 rounded-lg transition-colors ${confirmCreditDelete === ca.id ? 'bg-destructive text-destructive-foreground' : 'text-muted-foreground hover:text-destructive'}`}
                     ><Trash2 className="w-4 h-4" /></button>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{t('credit.totalSpent')}: {formatCurrency(totalSpent)}</span>
-                    <span>{t('credit.creditLimit')}: {formatCurrency(ca.credit_limit)}</span>
+                    {isCard ? (
+                      <>
+                        <span>{t('credit.totalSpent')}: {formatCurrency(cardBal!.totalSpent)}</span>
+                        <span>{t('credit.creditLimit')}: {formatCurrency(ca.credit_limit)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{t('credit.borrowed')}: {formatCurrency(loanBal!.borrowed)}</span>
+                        <span>{t('credit.paid')}: {formatCurrency(loanBal!.paid)}</span>
+                      </>
+                    )}
                   </div>
-                  {ca.credit_type === 'credit_card' && ca.min_monthly_spend > 0 && (
+                  {isCard && ca.min_monthly_spend > 0 && (
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{t('credit.minSpendProgress')}</span>
-                        <span>{formatCurrency(cycleSpent)} / {formatCurrency(ca.min_monthly_spend)}</span>
+                        <span>{formatCurrency(cardBal!.cycleSpent)} / {formatCurrency(ca.min_monthly_spend)}</span>
                       </div>
                       <Progress value={minSpendPct} className="h-2" />
                     </div>
