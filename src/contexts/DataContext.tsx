@@ -24,12 +24,14 @@ interface DataContextType {
   addAccount: (acc: Omit<Account, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   addProfile: (profile: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Profile | null>;
   addCreditAccount: (ca: Omit<CreditAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateCreditAccount: (id: string, updates: Partial<Omit<CreditAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
   deleteCreditAccount: (id: string) => Promise<void>;
   getAccountBalance: (accountId: string) => number;
   getCreditAccountBalance: (creditAccountId: string) => { totalSpent: number; availableCredit: number; cycleSpent: number };
+  getLoanBalance: (creditAccountId: string) => { borrowed: number; paid: number; remaining: number };
   getEditHistory: (transactionId: string) => TransactionEdit[];
   monthlyIncome: number;
   monthlyExpenses: number;
