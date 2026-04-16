@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, User } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES } from '@/types/database';
 
 const formatCurrency = (amount: number) =>
@@ -44,7 +44,9 @@ const ProfileDetailPage: React.FC = () => {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{PROFILE_TYPES.find(pt => pt.value === profile.type)?.icon || '👤'}</span>
+          <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground">
+            {(() => { const Icon = PROFILE_TYPES.find(pt => pt.value === profile.type)?.Icon ?? User; return <Icon className="w-5 h-5" />; })()}
+          </span>
           <div>
             <h1 className="text-xl font-semibold text-foreground">{profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</h1>
             <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
