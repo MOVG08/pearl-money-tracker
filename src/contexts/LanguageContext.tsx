@@ -129,6 +129,10 @@ const translations: Translations = {
   'credit.save': { es: 'Crear crédito', en: 'Create credit' },
   'credit.name': { es: 'Nombre', en: 'Name' },
   'credit.transactions': { es: 'Movimientos del crédito', en: 'Credit transactions' },
+  'credit.startDate': { es: 'Fecha del préstamo', en: 'Loan start date' },
+  'credit.borrowed': { es: 'Cantidad prestada', en: 'Borrowed amount' },
+  'credit.paid': { es: 'Pagado', en: 'Paid' },
+  'credit.remaining': { es: 'Restante', en: 'Remaining' },
   // Settings
   'settings.title': { es: 'Ajustes', en: 'Settings' },
   'settings.language': { es: 'Idioma', en: 'Language' },

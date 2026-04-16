@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, CREDIT_TYPES } from '@/types/database';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, CreditCard } from 'lucide-react';
 
 const formatCurrency = (amount: number) =>
@@ -14,7 +15,7 @@ const CreditAccountDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { creditAccounts, transactions, accounts, profiles, getCreditAccountBalance } = useData();
+  const { creditAccounts, transactions, accounts, profiles, getCreditAccountBalance, getLoanBalance, updateCreditAccount } = useData();
 
   const creditAccount = creditAccounts.find(c => c.id === id);
   if (!creditAccount) {
@@ -27,11 +28,19 @@ const CreditAccountDetailPage: React.FC = () => {
   }
 
   const ct = CREDIT_TYPES.find(c => c.value === creditAccount.credit_type);
-  const { totalSpent, availableCredit, cycleSpent } = getCreditAccountBalance(creditAccount.id);
-  const minSpendPct = creditAccount.min_monthly_spend > 0 ? Math.min(100, (cycleSpent / creditAccount.min_monthly_spend) * 100) : 0;
+  const isCard = creditAccount.credit_type === 'credit_card';
+  const cardBal = isCard ? getCreditAccountBalance(creditAccount.id) : null;
+  const loanBal = !isCard ? getLoanBalance(creditAccount.id) : null;
+  const minSpendPct = isCard && creditAccount.min_monthly_spend > 0 && cardBal
+    ? Math.min(100, (cardBal.cycleSpent / creditAccount.min_monthly_spend) * 100) : 0;
 
   const creditTxs = transactions.filter(tx => tx.credit_account_id === id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
+
+  const dateValue = (iso?: string) => (iso ? iso.slice(0, 10) : '');
+  const handleDateChange = (field: 'cut_off_date' | 'payment_due_date' | 'next_payment_date' | 'start_date') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateCreditAccount(creditAccount.id, { [field]: e.target.value || undefined } as any);
+  };
 
   return (
     <div className="space-y-5 pb-24">
@@ -49,55 +58,80 @@ const CreditAccountDetailPage: React.FC = () => {
       </div>
 
       {/* Balance info */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="glass rounded-xl p-4 text-center">
-          <p className="text-xs text-muted-foreground">{t('credit.availableCredit')}</p>
-          <p className="text-lg font-mono font-semibold text-success">{formatCurrency(availableCredit)}</p>
-        </div>
-        <div className="glass rounded-xl p-4 text-center">
-          <p className="text-xs text-muted-foreground">{t('credit.totalSpent')}</p>
-          <p className="text-lg font-mono font-semibold text-destructive">{formatCurrency(totalSpent)}</p>
-        </div>
-      </div>
-
-      <div className="glass rounded-xl p-4 text-center">
-        <p className="text-xs text-muted-foreground">{creditAccount.credit_type === 'credit_card' ? t('credit.creditLimit') : t('credit.loanAmount')}</p>
-        <p className="text-lg font-mono font-semibold text-foreground">{formatCurrency(creditAccount.credit_limit)}</p>
-      </div>
-
-      {/* TDC-specific info */}
-      {creditAccount.credit_type === 'credit_card' && (
-        <div className="glass rounded-xl p-4 space-y-3">
-          {creditAccount.cut_off_date && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('credit.cutOffDate')}</span>
-              <span className="text-foreground">{new Date(creditAccount.cut_off_date).toLocaleDateString('es-MX')}</span>
+      {isCard ? (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass rounded-xl p-4 text-center">
+              <p className="text-xs text-muted-foreground">{t('credit.availableCredit')}</p>
+              <p className="text-lg font-mono font-semibold text-success">{formatCurrency(cardBal!.availableCredit)}</p>
             </div>
-          )}
-          {creditAccount.payment_due_date && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('credit.paymentDueDate')}</span>
-              <span className="text-foreground">{new Date(creditAccount.payment_due_date).toLocaleDateString('es-MX')}</span>
+            <div className="glass rounded-xl p-4 text-center">
+              <p className="text-xs text-muted-foreground">{t('credit.totalSpent')}</p>
+              <p className="text-lg font-mono font-semibold text-destructive">{formatCurrency(cardBal!.totalSpent)}</p>
             </div>
-          )}
-          {creditAccount.min_monthly_spend > 0 && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{t('credit.minSpendProgress')}</span>
-                <span className="text-foreground font-mono">{formatCurrency(cycleSpent)} / {formatCurrency(creditAccount.min_monthly_spend)}</span>
-              </div>
-              <Progress value={minSpendPct} className="h-2.5" />
+          </div>
+          <div className="glass rounded-xl p-4 text-center">
+            <p className="text-xs text-muted-foreground">{t('credit.creditLimit')}</p>
+            <p className="text-lg font-mono font-semibold text-foreground">{formatCurrency(creditAccount.credit_limit)}</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass rounded-xl p-4 text-center">
+              <p className="text-xs text-muted-foreground">{t('credit.remaining')}</p>
+              <p className="text-lg font-mono font-semibold text-destructive">{formatCurrency(loanBal!.remaining)}</p>
             </div>
-          )}
-        </div>
+            <div className="glass rounded-xl p-4 text-center">
+              <p className="text-xs text-muted-foreground">{t('credit.paid')}</p>
+              <p className="text-lg font-mono font-semibold text-success">{formatCurrency(loanBal!.paid)}</p>
+            </div>
+          </div>
+          <div className="glass rounded-xl p-4 text-center">
+            <p className="text-xs text-muted-foreground">{t('credit.borrowed')}</p>
+            <p className="text-lg font-mono font-semibold text-foreground">{formatCurrency(loanBal!.borrowed)}</p>
+          </div>
+        </>
       )}
 
-      {creditAccount.next_payment_date && (
-        <div className="glass rounded-xl p-4 flex justify-between text-sm">
-          <span className="text-muted-foreground">{t('credit.nextPayment')}</span>
-          <span className="text-foreground">{new Date(creditAccount.next_payment_date).toLocaleDateString('es-MX')}</span>
+      {/* Editable dates */}
+      <div className="glass rounded-xl p-4 space-y-3">
+        {isCard && (
+          <>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground shrink-0">{t('credit.cutOffDate')}</span>
+              <Input type="date" value={dateValue(creditAccount.cut_off_date)} onChange={handleDateChange('cut_off_date')}
+                className="h-9 max-w-[180px] bg-secondary border-border/50 rounded-lg text-foreground" />
+            </div>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground shrink-0">{t('credit.paymentDueDate')}</span>
+              <Input type="date" value={dateValue(creditAccount.payment_due_date)} onChange={handleDateChange('payment_due_date')}
+                className="h-9 max-w-[180px] bg-secondary border-border/50 rounded-lg text-foreground" />
+            </div>
+          </>
+        )}
+        {!isCard && (
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-muted-foreground shrink-0">{t('credit.startDate')}</span>
+            <Input type="date" value={dateValue(creditAccount.start_date)} onChange={handleDateChange('start_date')}
+              className="h-9 max-w-[180px] bg-secondary border-border/50 rounded-lg text-foreground" />
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground shrink-0">{t('credit.nextPayment')}</span>
+          <Input type="date" value={dateValue(creditAccount.next_payment_date)} onChange={handleDateChange('next_payment_date')}
+            className="h-9 max-w-[180px] bg-secondary border-border/50 rounded-lg text-foreground" />
         </div>
-      )}
+        {isCard && creditAccount.min_monthly_spend > 0 && (
+          <div className="space-y-1.5 pt-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{t('credit.minSpendProgress')}</span>
+              <span className="text-foreground font-mono">{formatCurrency(cardBal!.cycleSpent)} / {formatCurrency(creditAccount.min_monthly_spend)}</span>
+            </div>
+            <Progress value={minSpendPct} className="h-2.5" />
+          </div>
+        )}
+      </div>
 
       {/* Transactions */}
       <div className="space-y-3">
