@@ -102,11 +102,43 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
+      // Auto-roll TDC dates: when payment_due_date < today, advance both dates by 1 month
+      // payment_due_date <- next_payment_date; next_payment_date <- next_payment_date + 1 month
+      let creditAccountsData = (creditRes.data as CreditAccount[]) || [];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const addMonth = (iso: string) => {
+        const d = new Date(iso + 'T00:00:00');
+        d.setMonth(d.getMonth() + 1);
+        return d.toISOString().slice(0, 10);
+      };
+      const rollUpdates: Promise<any>[] = [];
+      creditAccountsData = creditAccountsData.map(ca => {
+        if (ca.credit_type !== 'credit_card') return ca;
+        let due = ca.payment_due_date;
+        let next = ca.next_payment_date;
+        if (!due || !next) return ca;
+        let changed = false;
+        // Loop in case multiple cycles passed
+        while (due && next && due < todayStr) {
+          due = next;
+          next = addMonth(next);
+          changed = true;
+        }
+        if (changed) {
+          rollUpdates.push(
+            supabase.from('credit_accounts').update({ payment_due_date: due, next_payment_date: next }).eq('id', ca.id)
+          );
+          return { ...ca, payment_due_date: due, next_payment_date: next };
+        }
+        return ca;
+      });
+      if (rollUpdates.length > 0) await Promise.all(rollUpdates);
+
       setTransactions(txData);
       setAccounts(accRes.data as Account[]);
       setProfiles(profilesData);
       setTransactionHistory(histRes.data as TransactionEdit[]);
-      setCreditAccounts((creditRes.data as CreditAccount[]) || []);
+      setCreditAccounts(creditAccountsData);
     } catch (err: any) {
       toast.error(err.message || 'Error fetching data');
     } finally {
@@ -192,6 +224,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.from('credit_accounts').delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
     setCreditAccounts(prev => prev.filter(c => c.id !== id));
+  };
+
+  const updateCreditAccount = async (id: string, updates: Partial<Omit<CreditAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
+    const { data, error } = await supabase
+      .from('credit_accounts')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return; }
+    setCreditAccounts(prev => prev.map(c => (c.id === id ? (data as CreditAccount) : c)));
+  };
+
+  const getLoanBalance = (creditAccountId: string) => {
+    const ca = creditAccounts.find(c => c.id === creditAccountId);
+    const borrowed = ca?.credit_limit ?? 0;
+    const txs = transactions.filter(t => t.credit_account_id === creditAccountId);
+    const paid = txs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
+    return { borrowed, paid, remaining: Math.max(0, borrowed - paid) };
   };
 
   const getAccountBalance = (accountId: string) => {
