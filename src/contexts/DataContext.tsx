@@ -323,9 +323,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const monthlyIncome = useMemo(() => monthlyTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
-  // Exclude card_payment from total expenses: it's a transfer of debt, not new spending.
-  // The original credit-card charges are already counted as expenses when made.
-  const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
+  // Exclude debt/card payments from total expenses: they're transfers of debt, not new spending.
+  const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && !isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
 
   return (
     <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, updateCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>
