@@ -147,6 +147,10 @@ const translations: Translations = {
   'settings.dark': { es: 'Oscuro', en: 'Dark' },
   'settings.light': { es: 'Claro', en: 'Light' },
   'settings.logout': { es: 'Cerrar sesión', en: 'Log out' },
+  'settings.name': { es: 'Tu nombre', en: 'Your name' },
+  'settings.namePlaceholder': { es: 'Escribe tu nombre', en: 'Enter your name' },
+  'settings.saveName': { es: 'Guardar', en: 'Save' },
+  'settings.nameUpdated': { es: 'Nombre actualizado', en: 'Name updated' },
   // General
   'general.cancel': { es: 'Cancelar', en: 'Cancel' },
   'general.delete': { es: 'Eliminar', en: 'Delete' },
