@@ -237,11 +237,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCreditAccounts(prev => prev.map(c => (c.id === id ? (data as CreditAccount) : c)));
   };
 
+  const isDebtPayment = (cat?: string) => cat === 'debt_payment' || cat === 'card_payment';
+
   const getLoanBalance = (creditAccountId: string) => {
     const ca = creditAccounts.find(c => c.id === creditAccountId);
     const borrowed = ca?.credit_limit ?? 0;
     const txs = transactions.filter(t => t.credit_account_id === creditAccountId);
-    const paid = txs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
+    const paid = txs.filter(t => isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
     return { borrowed, paid, remaining: Math.max(0, borrowed - paid) };
   };
 
@@ -259,8 +261,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const ca = creditAccounts.find(c => c.id === creditAccountId);
     const limit = ca?.credit_limit ?? 0;
     const creditTxs = transactions.filter(t => t.credit_account_id === creditAccountId);
-    const charges = creditTxs.filter(t => t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0);
-    const payments = creditTxs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
+    const charges = creditTxs.filter(t => !isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
+    const payments = creditTxs.filter(t => isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
     const totalSpent = charges - payments;
 
     // Compute current billing cycle window using date strings (YYYY-MM-DD) to avoid TZ issues.
@@ -299,7 +301,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const cycleSpent = creditTxs.filter(t => {
-      if (t.category === 'card_payment') return false;
+      if (isDebtPayment(t.category)) return false;
       const d = (t.date || '').slice(0, 10);
       return d >= cycleStartIso && d <= cycleEndIso;
     }).reduce((s, t) => s + t.amount, 0);
@@ -321,9 +323,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const monthlyIncome = useMemo(() => monthlyTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
-  // Exclude card_payment from total expenses: it's a transfer of debt, not new spending.
-  // The original credit-card charges are already counted as expenses when made.
-  const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && t.category !== 'card_payment').reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
+  // Exclude debt/card payments from total expenses: they're transfers of debt, not new spending.
+  const monthlyExpenses = useMemo(() => monthlyTransactions.filter(t => t.type === 'expense' && !isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0), [monthlyTransactions]);
 
   return (
     <DataContext.Provider value={{ transactions, accounts, profiles, creditAccounts, transactionHistory, loading, defaultProfileId, addTransaction, updateTransaction, addAccount, addProfile, addCreditAccount, updateCreditAccount, deleteTransaction, deleteProfile, deleteAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance, getEditHistory, monthlyIncome, monthlyExpenses, balance }}>

@@ -81,7 +81,7 @@ export const EXPENSE_CATEGORIES: Category[] = [
   { id: 'education', name: 'Educación', icon: '📚', type: 'expense' },
   { id: 'shopping', name: 'Compras', icon: '🛍️', type: 'expense' },
   { id: 'services', name: 'Servicios', icon: '📱', type: 'expense' },
-  { id: 'card_payment', name: 'Pago de tarjeta', icon: '💳', type: 'expense' },
+  { id: 'debt_payment', name: 'Pago de deudas', icon: '💳', type: 'expense' },
   { id: 'other_expense', name: 'Otros', icon: '📦', type: 'expense' },
 ];
 

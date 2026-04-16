@@ -154,7 +154,7 @@ const CreditAccountDetailPage: React.FC = () => {
             const cat = allCategories.find(c => c.id === tx.category);
             const acc = accounts.find(a => a.id === tx.account_id);
             const profile = profiles.find(p => p.id === tx.profile_id);
-            const isPayment = tx.category === 'card_payment';
+            const isPayment = tx.category === 'debt_payment' || tx.category === 'card_payment';
 
             return (
               <motion.div key={tx.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}

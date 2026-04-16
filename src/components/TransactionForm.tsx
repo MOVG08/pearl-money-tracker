@@ -31,7 +31,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [notes, setNotes] = useState(editTransaction?.notes || '');
   // For card_payment expenses paid from a regular account: which credit card to apply payment to
   const [paymentCardId, setPaymentCardId] = useState(
-    editTransaction && editTransaction.category === 'card_payment' && editTransaction.account_id
+    editTransaction && (editTransaction.category === 'debt_payment' || editTransaction.category === 'card_payment') && editTransaction.account_id
       ? editTransaction.credit_account_id || ''
       : ''
   );
@@ -91,7 +91,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     // - else if category is card_payment and a card is selected: attribute payment to it
     let finalCreditAccountId: string | undefined;
     if (source.kind === 'credit') finalCreditAccountId = creditAccountId;
-    else if (type === 'expense' && category === 'card_payment' && paymentCardId) finalCreditAccountId = paymentCardId;
+    else if (type === 'expense' && category === 'debt_payment' && paymentCardId) finalCreditAccountId = paymentCardId;
 
     const txData: any = {
       type,
@@ -176,13 +176,13 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               ))}
             </div>
           </div>
-          {type === 'expense' && creditAccounts.length > 0 && (
+          {type === 'expense' && creditAccounts.filter(c => c.credit_type === 'credit_card').length > 0 && (
             <div>
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mb-1 flex items-center gap-1">
                 <CreditCard className="w-3 h-3" /> {t('credit.title')}
               </p>
               <div className="flex gap-2 flex-wrap">
-                {creditAccounts.map(ca => (
+                {creditAccounts.filter(c => c.credit_type === 'credit_card').map(ca => (
                   <button key={ca.id} type="button"
                     onClick={() => setSource({ kind: 'credit', id: ca.id })}
                     className={`px-3 py-2 rounded-lg text-sm transition-all ${source.kind === 'credit' && source.id === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
@@ -304,7 +304,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Card payment target (when paying a credit card from a regular account) */}
-      {type === 'expense' && category === 'card_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
+      {type === 'expense' && category === 'debt_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1">
             <CreditCard className="w-3 h-3" /> {t('transactions.payToCard')}
