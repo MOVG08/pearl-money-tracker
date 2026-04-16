@@ -91,22 +91,24 @@ export const INCOME_CATEGORIES: Category[] = [
   { id: 'other_income', name: 'Otros', icon: '💵', type: 'income' },
 ];
 
-export const ACCOUNT_TYPES = [
-  { value: 'cash' as const, labelKey: 'accountType.cash', icon: '💵' },
-  { value: 'bank' as const, labelKey: 'accountType.bank', icon: '🏦' },
-  { value: 'savings' as const, labelKey: 'accountType.savings', icon: '🐷' },
-  { value: 'other' as const, labelKey: 'accountType.other', icon: '📁' },
+import { Wallet, Landmark, PiggyBank, Folder, CreditCard, Home, Car, HandCoins, User, Building2, type LucideIcon } from 'lucide-react';
+
+export const ACCOUNT_TYPES: { value: 'cash' | 'bank' | 'savings' | 'other'; labelKey: string; Icon: LucideIcon }[] = [
+  { value: 'cash', labelKey: 'accountType.cash', Icon: Wallet },
+  { value: 'bank', labelKey: 'accountType.bank', Icon: Landmark },
+  { value: 'savings', labelKey: 'accountType.savings', Icon: PiggyBank },
+  { value: 'other', labelKey: 'accountType.other', Icon: Folder },
 ];
 
-export const CREDIT_TYPES = [
-  { value: 'credit_card' as const, labelKey: 'credit.creditCard', icon: '💳' },
-  { value: 'mortgage' as const, labelKey: 'credit.mortgage', icon: '🏠' },
-  { value: 'auto' as const, labelKey: 'credit.auto', icon: '🚗' },
-  { value: 'personal' as const, labelKey: 'credit.personal', icon: '💰' },
+export const CREDIT_TYPES: { value: CreditType; labelKey: string; Icon: LucideIcon }[] = [
+  { value: 'credit_card', labelKey: 'credit.creditCard', Icon: CreditCard },
+  { value: 'mortgage', labelKey: 'credit.mortgage', Icon: Home },
+  { value: 'auto', labelKey: 'credit.auto', Icon: Car },
+  { value: 'personal', labelKey: 'credit.personal', Icon: HandCoins },
 ];
 
-export const PROFILE_TYPES = [
-  { value: 'person' as const, labelKey: 'profileType.person', icon: '👤' },
-  { value: 'business' as const, labelKey: 'profileType.business', icon: '🏢' },
-  { value: 'bank' as const, labelKey: 'profileType.bank', icon: '🏦' },
+export const PROFILE_TYPES: { value: 'person' | 'business' | 'bank'; labelKey: string; Icon: LucideIcon }[] = [
+  { value: 'person', labelKey: 'profileType.person', Icon: User },
+  { value: 'business', labelKey: 'profileType.business', Icon: Building2 },
+  { value: 'bank', labelKey: 'profileType.bank', Icon: Landmark },
 ];

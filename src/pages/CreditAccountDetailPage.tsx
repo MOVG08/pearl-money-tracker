@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, CREDIT_TYPES } from '@/types/database';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CreditCard } from 'lucide-react';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
@@ -41,7 +41,9 @@ const CreditAccountDetailPage: React.FC = () => {
 
       {/* Header */}
       <div className="glass rounded-2xl p-5 text-center space-y-1">
-        <span className="text-3xl">{ct?.icon || '💳'}</span>
+        <span className="inline-flex w-12 h-12 rounded-2xl bg-secondary items-center justify-center text-foreground">
+          {(() => { const Icon = ct?.Icon ?? CreditCard; return <Icon className="w-6 h-6" />; })()}
+        </span>
         <h1 className="text-xl font-semibold text-foreground">{creditAccount.name}</h1>
         <p className="text-xs text-muted-foreground">{ct ? t(ct.labelKey) : creditAccount.credit_type}</p>
       </div>

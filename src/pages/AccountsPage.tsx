@@ -6,7 +6,7 @@ import { useData } from '@/contexts/DataContext';
 import { ACCOUNT_TYPES, CREDIT_TYPES, type CreditType } from '@/types/database';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Landmark, Folder, CreditCard } from 'lucide-react';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
@@ -84,11 +84,14 @@ const AccountsPage: React.FC = () => {
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">{t('accounts.type')}</label>
               <div className="grid grid-cols-2 gap-2">
-                {ACCOUNT_TYPES.map(at => (
-                  <button key={at.value} type="button" onClick={() => setType(at.value)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${type === at.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-                  ><span className="text-lg">{at.icon}</span><span>{t(at.labelKey)}</span></button>
-                ))}
+                {ACCOUNT_TYPES.map(at => {
+                  const Icon = at.Icon;
+                  return (
+                    <button key={at.value} type="button" onClick={() => setType(at.value)}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${type === at.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                    ><Icon className="w-5 h-5" /><span>{t(at.labelKey)}</span></button>
+                  );
+                })}
               </div>
             </div>
             <Input type="number" inputMode="decimal" step="0.01" placeholder={t('accounts.balance')} value={balance} onChange={(e) => setBalance(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl font-mono" />
@@ -98,7 +101,7 @@ const AccountsPage: React.FC = () => {
 
         {accounts.length === 0 && !showForm ? (
           <div className="text-center py-12 space-y-2">
-            <p className="text-4xl">🏦</p>
+            <Landmark className="w-10 h-10 mx-auto text-muted-foreground" />
             <p className="text-foreground font-medium">{t('accounts.noAccounts')}</p>
             <p className="text-sm text-muted-foreground">{t('accounts.createFirst')}</p>
           </div>
@@ -106,12 +109,13 @@ const AccountsPage: React.FC = () => {
           <div className="space-y-2">
             {accounts.map((acc, i) => {
               const at = ACCOUNT_TYPES.find(a => a.value === acc.type);
+              const Icon = at?.Icon ?? Folder;
               return (
                 <motion.div key={acc.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/accounts/${acc.id}`)}
                   className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
                 >
-                  <span className="text-2xl">{at?.icon || '📁'}</span>
+                  <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground"><Icon className="w-5 h-5" /></span>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">{acc.name}</p>
                     <p className="text-xs text-muted-foreground">{at ? t(at.labelKey) : acc.type}</p>
@@ -142,11 +146,14 @@ const AccountsPage: React.FC = () => {
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.type')}</label>
               <div className="grid grid-cols-2 gap-2">
-                {CREDIT_TYPES.map(ct => (
-                  <button key={ct.value} type="button" onClick={() => setCreditType(ct.value)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${creditType === ct.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-                  ><span className="text-lg">{ct.icon}</span><span>{t(ct.labelKey)}</span></button>
-                ))}
+                {CREDIT_TYPES.map(ct => {
+                  const Icon = ct.Icon;
+                  return (
+                    <button key={ct.value} type="button" onClick={() => setCreditType(ct.value)}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${creditType === ct.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                    ><Icon className="w-5 h-5" /><span>{t(ct.labelKey)}</span></button>
+                  );
+                })}
               </div>
             </div>
             <Input type="number" inputMode="decimal" step="0.01"
@@ -180,7 +187,7 @@ const AccountsPage: React.FC = () => {
 
         {creditAccounts.length === 0 && !showCreditForm ? (
           <div className="text-center py-12 space-y-2">
-            <p className="text-4xl">💳</p>
+            <CreditCard className="w-10 h-10 mx-auto text-muted-foreground" />
             <p className="text-foreground font-medium">{t('credit.noCreditAccounts')}</p>
             <p className="text-sm text-muted-foreground">{t('credit.createFirst')}</p>
           </div>
@@ -197,7 +204,9 @@ const AccountsPage: React.FC = () => {
                   className="glass rounded-xl p-4 space-y-2 cursor-pointer active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{ct?.icon || '💳'}</span>
+                    <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground">
+                      {(() => { const Icon = ct?.Icon ?? CreditCard; return <Icon className="w-5 h-5" />; })()}
+                    </span>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{ca.name}</p>
                       <p className="text-xs text-muted-foreground">{ct ? t(ct.labelKey) : ca.credit_type}</p>

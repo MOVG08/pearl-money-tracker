@@ -72,19 +72,22 @@ const ProfilesPage: React.FC = () => {
             autoFocus
           />
           <div className="flex gap-2">
-            {PROFILE_TYPES.map(pt => (
-              <button
-                key={pt.value}
-                type="button"
-                onClick={() => setType(pt.value)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
-                  type === pt.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                }`}
-              >
-                <span>{pt.icon}</span>
-                <span>{t(pt.labelKey)}</span>
-              </button>
-            ))}
+            {PROFILE_TYPES.map(pt => {
+              const Icon = pt.Icon;
+              return (
+                <button
+                  key={pt.value}
+                  type="button"
+                  onClick={() => setType(pt.value)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
+                    type === pt.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{t(pt.labelKey)}</span>
+                </button>
+              );
+            })}
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-3 rounded-xl text-sm font-medium text-muted-foreground bg-secondary">
@@ -105,25 +108,30 @@ const ProfilesPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {visibleProfiles.map(profile => (
-            <Card
-              key={profile.id}
-              onClick={() => navigate(`/profiles/${profile.id}`)}
-              className="flex items-center gap-3 p-4 rounded-xl bg-card border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
-            >
-              <span className="text-2xl">{PROFILE_TYPES.find(pt => pt.value === profile.type)?.icon || '👤'}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
-                <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
-              </div>
-              <button
-                onClick={(e) => handleDelete(profile.id, e)}
-                className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+          {visibleProfiles.map(profile => {
+            const Icon = PROFILE_TYPES.find(pt => pt.value === profile.type)?.Icon ?? Users;
+            return (
+              <Card
+                key={profile.id}
+                onClick={() => navigate(`/profiles/${profile.id}`)}
+                className="flex items-center gap-3 p-4 rounded-xl bg-card border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </Card>
-          ))}
+                <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground">
+                  <Icon className="w-5 h-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
+                  <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
+                </div>
+                <button
+                  onClick={(e) => handleDelete(profile.id, e)}
+                  className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </Card>
+            );
+          })}
         </div>
       )}
 

@@ -5,7 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionT
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X, CreditCard } from 'lucide-react';
+import { Search, Plus, X, CreditCard, User } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -218,7 +218,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
-              <span className="text-sm">{PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.icon || '👤'}</span>
+              {(() => { const Icon = PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User; return <Icon className="w-4 h-4 text-foreground" />; })()}
               <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
               <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
@@ -236,14 +236,17 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               </div>
               {showProfileDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                  {filteredProfiles.map(p => (
-                    <button key={p.id} type="button"
-                      onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
-                    >
-                      <span>{PROFILE_TYPES.find(pt => pt.value === p.type)?.icon || '👤'}</span><span>{p.name}</span>
-                    </button>
-                  ))}
+                  {filteredProfiles.map(p => {
+                    const Icon = PROFILE_TYPES.find(pt => pt.value === p.type)?.Icon ?? User;
+                    return (
+                      <button key={p.id} type="button"
+                        onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Icon className="w-4 h-4" /><span>{p.name}</span>
+                      </button>
+                    );
+                  })}
                   <button type="button"
                     onClick={() => { setShowQuickCreate(true); setShowProfileDropdown(false); setNewProfileName(profileSearch); }}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-secondary transition-colors border-t border-border"
@@ -261,13 +264,16 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                 className="h-10 bg-background border-border/50 rounded-lg text-sm" autoFocus
               />
               <div className="flex gap-2">
-                {PROFILE_TYPES.map(pt => (
-                  <button key={pt.value} type="button" onClick={() => setNewProfileType(pt.value)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-all ${
-                      newProfileType === pt.value ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
-                    }`}
-                  ><span>{pt.icon}</span><span>{t(pt.labelKey)}</span></button>
-                ))}
+                {PROFILE_TYPES.map(pt => {
+                  const Icon = pt.Icon;
+                  return (
+                    <button key={pt.value} type="button" onClick={() => setNewProfileType(pt.value)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-all ${
+                        newProfileType === pt.value ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
+                      }`}
+                    ><Icon className="w-3.5 h-3.5" /><span>{t(pt.labelKey)}</span></button>
+                  );
+                })}
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setShowQuickCreate(false)} className="flex-1 py-2 rounded-lg text-xs text-muted-foreground bg-background">{t('general.cancel')}</button>
