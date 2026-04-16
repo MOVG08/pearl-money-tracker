@@ -85,8 +85,8 @@ const DashboardPage: React.FC = () => {
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const cards = [
-    { key: 'income' as const, label: t('dashboard.income'), value: monthlyIncome, icon: TrendingUp, className: 'gradient-income' },
-    { key: 'expense' as const, label: t('dashboard.expenses'), value: monthlyExpenses, icon: TrendingDown, className: 'gradient-expense' },
+    { key: 'income' as const, label: t('dashboard.income'), value: monthlyIncome, icon: TrendingUp, variant: 'income' },
+    { key: 'expense' as const, label: t('dashboard.expenses'), value: monthlyExpenses, icon: TrendingDown, variant: 'expense' },
   ];
 
   const toggleCard = (key: 'income' | 'expense' | 'balance') => {
@@ -121,16 +121,20 @@ const DashboardPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={() => toggleCard(card.key)}
-                className={`${card.className} rounded-2xl p-5 text-primary-foreground cursor-pointer active:scale-[0.98] transition-transform`}
+                className={`summary-card summary-card--${card.variant} rounded-2xl p-5 pl-6 cursor-pointer active:scale-[0.99] transition-transform`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-80">{card.label}</p>
-                    <p className="text-2xl font-semibold font-mono mt-1">{formatCurrency(card.value)}</p>
+                <div className="relative flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">{card.label}</p>
+                    <p className="text-[26px] leading-tight font-semibold font-mono mt-1.5 text-foreground tracking-tight">
+                      {formatCurrency(card.value)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/70 mt-2">{t('dashboard.tapToSee')}</p>
                   </div>
-                  <card.icon className="w-8 h-8 opacity-60" />
+                  <span className="summary-card__icon shrink-0">
+                    <card.icon className="w-5 h-5" />
+                  </span>
                 </div>
-                <p className="text-xs opacity-50 mt-2">{t('dashboard.tapToSee')}</p>
               </motion.div>
               <AnimatePresence>
                 {isExpanded && chartData.length > 0 && (
@@ -194,16 +198,20 @@ const DashboardPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             onClick={() => toggleCard('balance')}
-            className="gradient-balance rounded-2xl p-5 text-primary-foreground cursor-pointer active:scale-[0.98] transition-transform"
+            className="summary-card summary-card--balance rounded-2xl p-5 pl-6 cursor-pointer active:scale-[0.99] transition-transform"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-80">{t('dashboard.balance')}</p>
-                <p className="text-2xl font-semibold font-mono mt-1">{formatCurrency(balance)}</p>
+            <div className="relative flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">{t('dashboard.balance')}</p>
+                <p className="text-[26px] leading-tight font-semibold font-mono mt-1.5 text-foreground tracking-tight">
+                  {formatCurrency(balance)}
+                </p>
+                <p className="text-[11px] text-muted-foreground/70 mt-2">{t('dashboard.tapToSee')}</p>
               </div>
-              <Wallet className="w-8 h-8 opacity-60" />
+              <span className="summary-card__icon shrink-0">
+                <Wallet className="w-5 h-5" />
+              </span>
             </div>
-            <p className="text-xs opacity-50 mt-2">{t('dashboard.tapToSee')}</p>
           </motion.div>
           <AnimatePresence>
             {expandedCard === 'balance' && balanceByAccount.length > 0 && (
