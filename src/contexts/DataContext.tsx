@@ -126,7 +126,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         if (changed) {
           rollUpdates.push(
-            supabase.from('credit_accounts').update({ payment_due_date: due, next_payment_date: next }).eq('id', ca.id)
+            Promise.resolve(supabase.from('credit_accounts').update({ payment_due_date: due, next_payment_date: next }).eq('id', ca.id))
           );
           return { ...ca, payment_due_date: due, next_payment_date: next };
         }
