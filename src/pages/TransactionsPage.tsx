@@ -5,6 +5,7 @@ import { useData } from '@/contexts/DataContext';
 import { Plus, Trash2, Pencil, History, ChevronDown, ArrowRight } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type Transaction } from '@/types/database';
 import TransactionForm from '@/components/TransactionForm';
+import { isDefaultProfile } from '@/contexts/DataContext';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
