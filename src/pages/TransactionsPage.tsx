@@ -10,14 +10,26 @@ import { isDefaultProfile } from '@/contexts/DataContext';
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 
+type SortKey = 'date' | 'created' | 'modified';
+
 const TransactionsPage: React.FC = () => {
   const { t } = useLanguage();
   const { transactions, accounts, profiles, creditAccounts, deleteTransaction, getEditHistory } = useData();
   const [showForm, setShowForm] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>('date');
 
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
+
+  const sortedTransactions = React.useMemo(() => {
+    const field = sortKey === 'date' ? 'date' : sortKey === 'created' ? 'created_at' : 'updated_at';
+    return [...transactions].sort((a, b) => {
+      const av = new Date((a as any)[field] || a.date).getTime();
+      const bv = new Date((b as any)[field] || b.date).getTime();
+      return bv - av;
+    });
+  }, [transactions, sortKey]);
 
   const handleEdit = (tx: Transaction) => { setEditingTx(tx); setShowForm(true); };
   const handleCloseForm = () => { setShowForm(false); setEditingTx(null); };
@@ -91,6 +103,17 @@ const TransactionsPage: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {transactions.length > 0 && (
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">{t('sort.label')}:</span>
+          {(['date', 'created', 'modified'] as const).map(k => (
+            <button key={k} onClick={() => setSortKey(k)}
+              className={`px-2.5 py-1 rounded-lg transition-colors ${sortKey === k ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}
+            >{t(`sort.${k}`)}</button>
+          ))}
+        </div>
+      )}
+
       {transactions.length === 0 ? (
         <div className="text-center py-16 space-y-2">
           <p className="text-4xl">📊</p>
@@ -99,7 +122,7 @@ const TransactionsPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {transactions.map((tx, i) => {
+          {sortedTransactions.map((tx, i) => {
             const cat = allCategories.find(c => c.id === tx.category);
             const acc = accounts.find(a => a.id === tx.account_id);
             const destAcc = accounts.find(a => a.id === tx.destination_account_id);
