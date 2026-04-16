@@ -25,6 +25,8 @@ export interface CreditAccount {
   cut_off_date?: string;
   payment_due_date?: string;
   min_monthly_spend: number;
+  /** For loans (non credit-card): date the loan was disbursed. */
+  start_date?: string;
   created_at: string;
   updated_at: string;
 }
