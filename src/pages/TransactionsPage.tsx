@@ -5,6 +5,7 @@ import { useData } from '@/contexts/DataContext';
 import { Plus, Trash2, Pencil, History, ChevronDown, ArrowRight } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type Transaction } from '@/types/database';
 import TransactionForm from '@/components/TransactionForm';
+import { isDefaultProfile } from '@/contexts/DataContext';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
@@ -20,6 +21,58 @@ const TransactionsPage: React.FC = () => {
 
   const handleEdit = (tx: Transaction) => { setEditingTx(tx); setShowForm(true); };
   const handleCloseForm = () => { setShowForm(false); setEditingTx(null); };
+
+  const noProfileLabel = t('dashboard.noProfile');
+
+  const fieldLabel = (field: string): string => {
+    const map: Record<string, string> = {
+      amount: t('transactions.amount'),
+      type: t('transactions.type'),
+      category: t('transactions.category'),
+      date: t('transactions.date'),
+      notes: t('transactions.notes'),
+      account_id: t('nav.accounts'),
+      destination_account_id: t('nav.accounts'),
+      profile_id: t('nav.profiles'),
+      credit_account_id: t('nav.accounts'),
+    };
+    return map[field] || field;
+  };
+
+  const formatValue = (field: string, value: string): string => {
+    if (!value || value === 'null' || value === 'undefined') return '—';
+    if (field === 'account_id' || field === 'destination_account_id') {
+      return accounts.find(a => a.id === value)?.name || '—';
+    }
+    if (field === 'credit_account_id') {
+      return creditAccounts.find(c => c.id === value)?.name || '—';
+    }
+    if (field === 'profile_id') {
+      const p = profiles.find(p => p.id === value);
+      if (!p) return '—';
+      return isDefaultProfile(p) ? noProfileLabel : p.name;
+    }
+    if (field === 'category') {
+      return allCategories.find(c => c.id === value)?.name || value;
+    }
+    if (field === 'amount') {
+      const n = Number(value);
+      return isNaN(n) ? value : formatCurrency(n);
+    }
+    if (field === 'date') {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? value : d.toLocaleDateString('es-MX');
+    }
+    if (field === 'type') {
+      const m: Record<string, string> = {
+        income: t('dashboard.income'),
+        expense: t('dashboard.expenses'),
+        transfer: t('transactions.transfer') || 'Transfer',
+      };
+      return m[value] || value;
+    }
+    return value;
+  };
 
   return (
     <div className="space-y-4 pb-24">
@@ -105,11 +158,11 @@ const TransactionsPage: React.FC = () => {
                       <div className="px-4 pb-3 pt-1 border-t border-border/50 space-y-1.5">
                         <p className="text-xs font-medium text-muted-foreground">{t('transactions.history')}</p>
                         {history.map(edit => (
-                          <div key={edit.id} className="text-xs text-muted-foreground flex gap-2">
-                            <span className="text-foreground/70 font-medium">{edit.field}</span>
-                            <span className="line-through text-destructive/60">{edit.old_value}</span>
+                          <div key={edit.id} className="text-xs text-muted-foreground flex flex-wrap gap-2 items-center">
+                            <span className="text-foreground/70 font-medium">{fieldLabel(edit.field)}</span>
+                            <span className="line-through text-destructive/60">{formatValue(edit.field, edit.old_value)}</span>
                             <span>→</span>
-                            <span className="text-success/80">{edit.new_value}</span>
+                            <span className="text-success/80">{formatValue(edit.field, edit.new_value)}</span>
                             <span className="ml-auto">{new Date(edit.edited_at).toLocaleString('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         ))}
