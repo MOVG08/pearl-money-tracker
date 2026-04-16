@@ -27,6 +27,7 @@ const translations: Translations = {
   'dashboard.balance': { es: 'Balance', en: 'Balance' },
   'dashboard.thisMonth': { es: 'Este mes', en: 'This month' },
   'dashboard.recentTransactions': { es: 'Movimientos recientes', en: 'Recent transactions' },
+  'dashboard.hello': { es: 'Hola', en: 'Hello' },
   'dashboard.overview': { es: 'Resumen', en: 'Overview' },
   'dashboard.incomeByProfile': { es: 'Ingresos por perfil', en: 'Income by profile' },
   'dashboard.expenseByProfile': { es: 'Gastos por perfil', en: 'Expenses by profile' },
@@ -68,6 +69,7 @@ const translations: Translations = {
   'transactions.chargeToCard': { es: 'Cargar a tarjeta', en: 'Charge to card' },
   'transactions.cardPayment': { es: 'Pago de tarjeta', en: 'Card payment' },
   'transactions.selectCreditAccount': { es: 'Seleccionar tarjeta/crédito', en: 'Select credit account' },
+  'transactions.payToCard': { es: 'Aplicar pago a tarjeta', en: 'Apply payment to card' },
   // Accounts
   'accounts.title': { es: 'Cuentas', en: 'Accounts' },
   'accounts.add': { es: 'Nueva cuenta', en: 'New account' },
