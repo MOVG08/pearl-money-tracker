@@ -29,6 +29,12 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
+  // For card_payment expenses paid from a regular account: which credit card to apply payment to
+  const [paymentCardId, setPaymentCardId] = useState(
+    editTransaction && editTransaction.category === 'card_payment' && editTransaction.account_id
+      ? editTransaction.credit_account_id || ''
+      : ''
+  );
 
   const [profileSearch, setProfileSearch] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -79,6 +85,13 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     if (type !== 'expense' && !accountId) return; // income/transfer must use a regular account
     if (type === 'expense' && !accountId && !creditAccountId) return;
 
+    // Determine final credit_account_id:
+    // - if source is a credit card: that card is the source (charge)
+    // - else if category is card_payment and a card is selected: attribute payment to it
+    let finalCreditAccountId: string | undefined;
+    if (source.kind === 'credit') finalCreditAccountId = creditAccountId;
+    else if (type === 'expense' && category === 'card_payment' && paymentCardId) finalCreditAccountId = paymentCardId;
+
     const txData: any = {
       type,
       amount: parseFloat(amount),
@@ -86,7 +99,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       account_id: source.kind === 'account' ? accountId : null,
       profile_id: profileId || undefined,
       destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
-      credit_account_id: source.kind === 'credit' ? creditAccountId : undefined,
+      credit_account_id: finalCreditAccountId,
       date,
       notes: notes || undefined,
     };
@@ -278,6 +291,22 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                 <span className="text-lg">{cat.icon}</span>
                 <span className="truncate w-full text-center">{cat.name}</span>
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Card payment target (when paying a credit card from a regular account) */}
+      {type === 'expense' && category === 'card_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1">
+            <CreditCard className="w-3 h-3" /> {t('transactions.payToCard')}
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {creditAccounts.map(ca => (
+              <button key={ca.id} type="button" onClick={() => setPaymentCardId(ca.id)}
+                className={`px-3 py-2 rounded-lg text-sm transition-all ${paymentCardId === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+              >💳 {ca.name}</button>
             ))}
           </div>
         </div>
