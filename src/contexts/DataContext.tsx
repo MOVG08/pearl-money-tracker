@@ -237,11 +237,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCreditAccounts(prev => prev.map(c => (c.id === id ? (data as CreditAccount) : c)));
   };
 
+  const isDebtPayment = (cat?: string) => cat === 'debt_payment' || cat === 'card_payment';
+
   const getLoanBalance = (creditAccountId: string) => {
     const ca = creditAccounts.find(c => c.id === creditAccountId);
     const borrowed = ca?.credit_limit ?? 0;
     const txs = transactions.filter(t => t.credit_account_id === creditAccountId);
-    const paid = txs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
+    const paid = txs.filter(t => isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
     return { borrowed, paid, remaining: Math.max(0, borrowed - paid) };
   };
 
