@@ -16,11 +16,11 @@ const formatCurrency = (amount: number) =>
 
 const DashboardPage: React.FC = () => {
   const { t, language } = useLanguage();
-  const { monthlyIncome, monthlyExpenses, balance, transactions, profiles } = useData();
+  const { monthlyIncome, monthlyExpenses, balance, transactions, profiles, accounts, getAccountBalance } = useData();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | null>(null);
+  const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | 'balance' | null>(null);
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -62,6 +62,18 @@ const DashboardPage: React.FC = () => {
     });
   }, [monthlyTx]);
 
+  const balanceByAccount = useMemo(() => {
+    const items = accounts.map(a => ({
+      accountId: a.id,
+      name: a.name,
+      value: getAccountBalance(a.id),
+    })).filter(i => i.value !== 0);
+    const total = items.reduce((s, i) => s + Math.abs(i.value), 0);
+    return items
+      .map(i => ({ ...i, pct: total > 0 ? Math.round((Math.abs(i.value) / total) * 100) : 0 }))
+      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  }, [accounts, transactions]);
+
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const cards = [
@@ -69,7 +81,7 @@ const DashboardPage: React.FC = () => {
     { key: 'expense' as const, label: t('dashboard.expenses'), value: monthlyExpenses, icon: TrendingDown, className: 'gradient-expense' },
   ];
 
-  const toggleCard = (key: 'income' | 'expense') => {
+  const toggleCard = (key: 'income' | 'expense' | 'balance') => {
     setExpandedCard(prev => prev === key ? null : key);
   };
 
@@ -168,20 +180,66 @@ const DashboardPage: React.FC = () => {
         })}
 
         {/* Balance card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="gradient-balance rounded-2xl p-5 text-primary-foreground"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-80">{t('dashboard.balance')}</p>
-              <p className="text-2xl font-semibold font-mono mt-1">{formatCurrency(balance)}</p>
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onClick={() => toggleCard('balance')}
+            className="gradient-balance rounded-2xl p-5 text-primary-foreground cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm opacity-80">{t('dashboard.balance')}</p>
+                <p className="text-2xl font-semibold font-mono mt-1">{formatCurrency(balance)}</p>
+              </div>
+              <Wallet className="w-8 h-8 opacity-60" />
             </div>
-            <Wallet className="w-8 h-8 opacity-60" />
-          </div>
-        </motion.div>
+            <p className="text-xs opacity-50 mt-2">{t('dashboard.tapToSee')}</p>
+          </motion.div>
+          <AnimatePresence>
+            {expandedCard === 'balance' && balanceByAccount.length > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="glass rounded-2xl p-5 mt-2">
+                  <h3 className="text-sm font-medium text-foreground mb-3">{t('dashboard.balanceByAccount')}</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-28 h-28">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={balanceByAccount.map(b => ({ ...b, value: Math.abs(b.value) }))} dataKey="value" cx="50%" cy="50%" innerRadius={25} outerRadius={50} paddingAngle={2}>
+                            {balanceByAccount.map((_, idx) => (
+                              <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      {balanceByAccount.map((item, idx) => (
+                        <button
+                          key={item.accountId}
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${item.accountId}`); }}
+                          className="w-full flex items-center gap-2 text-sm rounded-md py-0.5 -mx-1 px-1 text-left hover:bg-muted/50 active:scale-[0.98] transition-all cursor-pointer"
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }} />
+                          <span className="text-muted-foreground truncate">{item.name}</span>
+                          <span className="ml-auto font-mono text-foreground text-xs">{item.pct}%</span>
+                          <span className="font-mono text-foreground text-xs">{formatCurrency(item.value)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
         </div>
       </section>
 

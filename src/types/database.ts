@@ -6,7 +6,7 @@ export interface Account {
   id: string;
   user_id: string;
   name: string;
-  type: 'cash' | 'bank' | 'savings' | 'other';
+  type: 'cash' | 'bank' | 'savings' | 'investment' | 'other';
   currency: string;
   balance: number;
   icon?: string;
@@ -73,7 +73,7 @@ export interface Category {
 }
 
 export const EXPENSE_CATEGORIES: Category[] = [
-  { id: 'food', name: 'Alimentación', icon: '🍽️', type: 'expense' },
+  { id: 'food', name: 'Comida', icon: '🍽️', type: 'expense' },
   { id: 'transport', name: 'Transporte', icon: '🚗', type: 'expense' },
   { id: 'housing', name: 'Vivienda', icon: '🏠', type: 'expense' },
   { id: 'entertainment', name: 'Entretenimiento', icon: '🎬', type: 'expense' },
@@ -93,12 +93,13 @@ export const INCOME_CATEGORIES: Category[] = [
   { id: 'other_income', name: 'Otros', icon: '💵', type: 'income' },
 ];
 
-import { Wallet, Landmark, PiggyBank, Folder, CreditCard, Home, Car, HandCoins, User, Building2, type LucideIcon } from 'lucide-react';
+import { Wallet, Landmark, PiggyBank, Folder, CreditCard, Home, Car, HandCoins, User, Building2, TrendingUp, type LucideIcon } from 'lucide-react';
 
-export const ACCOUNT_TYPES: { value: 'cash' | 'bank' | 'savings' | 'other'; labelKey: string; Icon: LucideIcon }[] = [
+export const ACCOUNT_TYPES: { value: 'cash' | 'bank' | 'savings' | 'investment' | 'other'; labelKey: string; Icon: LucideIcon }[] = [
   { value: 'cash', labelKey: 'accountType.cash', Icon: Wallet },
   { value: 'bank', labelKey: 'accountType.bank', Icon: Landmark },
   { value: 'savings', labelKey: 'accountType.savings', Icon: PiggyBank },
+  { value: 'investment', labelKey: 'accountType.investment', Icon: TrendingUp },
   { value: 'other', labelKey: 'accountType.other', Icon: Folder },
 ];
 

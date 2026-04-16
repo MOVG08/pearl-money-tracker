@@ -17,7 +17,7 @@ const AccountsPage: React.FC = () => {
   const { accounts, creditAccounts, addAccount, deleteAccount, addCreditAccount, deleteCreditAccount, getAccountBalance, getCreditAccountBalance, getLoanBalance } = useData();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
-  const [type, setType] = useState<'cash' | 'bank' | 'savings' | 'other'>('bank');
+  const [type, setType] = useState<'cash' | 'bank' | 'savings' | 'investment' | 'other'>('bank');
   const [balance, setBalance] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 

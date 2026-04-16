@@ -263,31 +263,45 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const payments = creditTxs.filter(t => t.category === 'card_payment').reduce((s, t) => s + t.amount, 0);
     const totalSpent = charges - payments;
 
+    // Compute current billing cycle window using date strings (YYYY-MM-DD) to avoid TZ issues.
     const now = new Date();
-    let cycleStart: Date;
-    let cycleEnd: Date;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const toIso = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
+    const lastDayOfMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+
+    let cycleStartIso: string;
+    let cycleEndIso: string;
 
     if (ca?.cut_off_date && ca.credit_type === 'credit_card') {
-      const cutDay = new Date(ca.cut_off_date).getUTCDate();
-      const today = now.getDate();
-      if (today <= cutDay) {
+      // Parse cut_off_date as a plain date (YYYY-MM-DD), independent of TZ.
+      const cutDay = parseInt(ca.cut_off_date.slice(8, 10), 10);
+      const todayIso = toIso(now.getFullYear(), now.getMonth(), now.getDate());
+      const thisMonthCutDay = Math.min(cutDay, lastDayOfMonth(now.getFullYear(), now.getMonth()));
+      const thisMonthCutIso = toIso(now.getFullYear(), now.getMonth(), thisMonthCutDay);
+      if (todayIso <= thisMonthCutIso) {
         // Cycle: (prev month cut + 1) ... (this month cut)
-        cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, cutDay + 1);
-        cycleEnd = new Date(now.getFullYear(), now.getMonth(), cutDay, 23, 59, 59);
+        const prevY = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        const prevM = (now.getMonth() + 11) % 12;
+        const prevCutDay = Math.min(cutDay, lastDayOfMonth(prevY, prevM));
+        cycleStartIso = toIso(prevY, prevM, prevCutDay + 1);
+        cycleEndIso = thisMonthCutIso;
       } else {
         // Cycle: (this month cut + 1) ... (next month cut)
-        cycleStart = new Date(now.getFullYear(), now.getMonth(), cutDay + 1);
-        cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, cutDay, 23, 59, 59);
+        const nextY = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+        const nextM = (now.getMonth() + 1) % 12;
+        const nextCutDay = Math.min(cutDay, lastDayOfMonth(nextY, nextM));
+        cycleStartIso = toIso(now.getFullYear(), now.getMonth(), thisMonthCutDay + 1);
+        cycleEndIso = toIso(nextY, nextM, nextCutDay);
       }
     } else {
-      cycleStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      cycleStartIso = toIso(now.getFullYear(), now.getMonth(), 1);
+      cycleEndIso = toIso(now.getFullYear(), now.getMonth(), lastDayOfMonth(now.getFullYear(), now.getMonth()));
     }
 
     const cycleSpent = creditTxs.filter(t => {
       if (t.category === 'card_payment') return false;
-      const d = new Date(t.date);
-      return d >= cycleStart && d <= cycleEnd;
+      const d = (t.date || '').slice(0, 10);
+      return d >= cycleStartIso && d <= cycleEndIso;
     }).reduce((s, t) => s + t.amount, 0);
 
     return { totalSpent: Math.max(0, totalSpent), availableCredit: limit - Math.max(0, totalSpent), cycleSpent };
