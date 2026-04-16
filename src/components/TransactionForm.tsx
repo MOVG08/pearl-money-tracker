@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useData } from '@/contexts/DataContext';
+import { useData, DEFAULT_PROFILE_SENTINEL } from '@/contexts/DataContext';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionType, type Transaction } from '@/types/database';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,9 +45,10 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const filteredProfiles = useMemo(() => {
-    if (!profileSearch) return profiles;
+    const visible = profiles.filter(p => p.name !== DEFAULT_PROFILE_SENTINEL);
+    if (!profileSearch) return visible;
     const q = profileSearch.toLowerCase();
-    return profiles.filter(p => p.name.toLowerCase().includes(q));
+    return visible.filter(p => p.name.toLowerCase().includes(q));
   }, [profiles, profileSearch]);
 
   const selectedProfile = profiles.find(p => p.id === profileId);
