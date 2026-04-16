@@ -122,14 +122,25 @@ const CreditAccountDetailPage: React.FC = () => {
           <Input type="date" value={dateValue(creditAccount.next_payment_date)} onChange={handleDateChange('next_payment_date')}
             className="h-9 max-w-[180px] bg-secondary border-border/50 rounded-lg text-foreground" />
         </div>
-        {isCard && creditAccount.min_monthly_spend > 0 && (
-          <div className="space-y-1.5 pt-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{t('credit.minSpendProgress')}</span>
-              <span className="text-foreground font-mono">{formatCurrency(cardBal!.cycleSpent)} / {formatCurrency(creditAccount.min_monthly_spend)}</span>
+        {isCard && (
+          <>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground shrink-0">{t('credit.minSpend')}</span>
+              <Input type="number" inputMode="decimal" step="0.01"
+                value={creditAccount.min_monthly_spend ?? 0}
+                onChange={(e) => updateCreditAccount(creditAccount.id, { min_monthly_spend: parseFloat(e.target.value) || 0 })}
+                className="h-9 max-w-[180px] bg-secondary border-border/50 rounded-lg text-foreground font-mono text-right" />
             </div>
-            <Progress value={minSpendPct} className="h-2.5" />
-          </div>
+            <div className="space-y-1.5 pt-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t('credit.minSpendProgress')}</span>
+                <span className="text-foreground font-mono">
+                  {formatCurrency(cardBal!.cycleSpent)} / {formatCurrency(creditAccount.min_monthly_spend || 0)}
+                </span>
+              </div>
+              <Progress value={minSpendPct} className="h-2.5" />
+            </div>
+          </>
         )}
       </div>
 
