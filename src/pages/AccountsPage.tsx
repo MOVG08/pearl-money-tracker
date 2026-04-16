@@ -168,7 +168,7 @@ const AccountsPage: React.FC = () => {
               <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.nextPayment')}</label>
               <Input type="date" value={nextPaymentDate} onChange={(e) => setNextPaymentDate(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" />
             </div>
-            {creditType === 'credit_card' && (
+            {creditType === 'credit_card' ? (
               <>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.cutOffDate')}</label>
@@ -183,6 +183,11 @@ const AccountsPage: React.FC = () => {
                   className="h-12 bg-secondary border-border/50 rounded-xl font-mono"
                 />
               </>
+            ) : (
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.startDate')}</label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" />
+              </div>
             )}
             <button type="submit" className="w-full py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground active:scale-95 transition-transform">{t('credit.save')}</button>
           </motion.form>
