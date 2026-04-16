@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +18,7 @@ const DashboardPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { monthlyIncome, monthlyExpenses, balance, transactions, profiles } = useData();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | null>(null);
 
@@ -43,6 +45,7 @@ const DashboardPage: React.FC = () => {
     return Object.entries(grouped).map(([id, value]) => {
       const profile = profiles.find(p => p.id === id);
       return {
+        profileId: profile ? profile.id : null,
         name: profile?.name || t('dashboard.noProfile'),
         value,
         pct: total > 0 ? Math.round((value / total) * 100) : 0,
@@ -134,14 +137,26 @@ const DashboardPage: React.FC = () => {
                           </ResponsiveContainer>
                         </div>
                         <div className="flex-1 space-y-1.5">
-                          {chartData.map((item, idx) => (
-                            <div key={item.name} className="flex items-center gap-2 text-sm">
-                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }} />
-                              <span className="text-muted-foreground truncate">{item.name}</span>
-                              <span className="ml-auto font-mono text-foreground text-xs">{item.pct}%</span>
-                              <span className="font-mono text-foreground text-xs">{formatCurrency(item.value)}</span>
-                            </div>
-                          ))}
+                          {chartData.map((item, idx) => {
+                            const clickable = !!item.profileId;
+                            return (
+                              <button
+                                key={item.name}
+                                type="button"
+                                disabled={!clickable}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (item.profileId) navigate(`/profiles/${item.profileId}`);
+                                }}
+                                className={`w-full flex items-center gap-2 text-sm rounded-md py-0.5 -mx-1 px-1 text-left ${clickable ? 'hover:bg-muted/50 active:scale-[0.98] transition-all cursor-pointer' : 'cursor-default'}`}
+                              >
+                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }} />
+                                <span className="text-muted-foreground truncate">{item.name}</span>
+                                <span className="ml-auto font-mono text-foreground text-xs">{item.pct}%</span>
+                                <span className="font-mono text-foreground text-xs">{formatCurrency(item.value)}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
