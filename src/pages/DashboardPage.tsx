@@ -54,13 +54,21 @@ const DashboardPage: React.FC = () => {
   };
 
   const balanceData = useMemo(() => {
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    // Starting balance = sum of all account initial balances + all non-transfer tx before this month
+    const initialAccountBalance = accounts.reduce((s, a) => s + (a.balance ?? 0), 0);
+    const priorDelta = transactions
+      .filter(tx => tx.type !== 'transfer' && new Date(tx.date) < monthStart)
+      .reduce((s, tx) => s + (tx.type === 'income' ? tx.amount : -tx.amount), 0);
+    let cumulative = initialAccountBalance + priorDelta;
     const sorted = [...monthlyTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    let cumulative = 0;
-    return sorted.map(tx => {
+    const points = [{ date: format(monthStart, 'dd/MM'), balance: cumulative }];
+    sorted.forEach(tx => {
       cumulative += tx.type === 'income' ? tx.amount : -tx.amount;
-      return { date: format(new Date(tx.date), 'dd/MM'), balance: cumulative };
+      points.push({ date: format(new Date(tx.date), 'dd/MM'), balance: cumulative });
     });
-  }, [monthlyTx]);
+    return points;
+  }, [monthlyTx, transactions, accounts, currentMonth, currentYear]);
 
   const balanceByAccount = useMemo(() => {
     const items = accounts.map(a => ({
