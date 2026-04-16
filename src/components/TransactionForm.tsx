@@ -45,6 +45,8 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   }, [profiles, profileSearch]);
 
   const selectedProfile = profiles.find(p => p.id === profileId);
+  const accountId = source.kind === 'account' ? source.id : '';
+  const creditAccountId = source.kind === 'credit' ? source.id : '';
   const destinationAccounts = useMemo(() => accounts.filter(a => a.id !== accountId), [accounts, accountId]);
 
   if (accounts.length === 0) {
@@ -71,18 +73,20 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !accountId) return;
-    if (type === 'transfer' && !destinationAccountId) return;
+    if (!amount) return;
+    if (type === 'transfer' && (!accountId || !destinationAccountId)) return;
     if (type !== 'transfer' && !category) return;
+    if (type !== 'expense' && !accountId) return; // income/transfer must use a regular account
+    if (type === 'expense' && !accountId && !creditAccountId) return;
 
     const txData: any = {
       type,
       amount: parseFloat(amount),
       category: type === 'transfer' ? 'transfer' : category,
-      account_id: accountId,
+      account_id: source.kind === 'account' ? accountId : null,
       profile_id: profileId || undefined,
       destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
-      credit_account_id: (type === 'expense' && chargeToCard && creditAccountId) ? creditAccountId : undefined,
+      credit_account_id: source.kind === 'credit' ? creditAccountId : undefined,
       date,
       notes: notes || undefined,
     };
@@ -104,7 +108,16 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
             <button
               key={t_type}
               type="button"
-              onClick={() => { setType(t_type); if (!editTransaction) { setCategory(''); setCreditAccountId(''); setChargeToCard(false); } }}
+              onClick={() => {
+                setType(t_type);
+                if (!editTransaction) {
+                  setCategory('');
+                  // Reset to a regular account for non-expense types
+                  if (t_type !== 'expense' && source.kind === 'credit') {
+                    setSource({ kind: 'account', id: accounts[0]?.id || '' });
+                  }
+                }
+              }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 type === t_type
                   ? t_type === 'expense' ? 'bg-destructive text-destructive-foreground'
