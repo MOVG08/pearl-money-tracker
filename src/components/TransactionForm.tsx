@@ -15,7 +15,7 @@ interface Props {
 
 const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const { t } = useLanguage();
-  const { addTransaction, updateTransaction, accounts, profiles, creditAccounts, addProfile } = useData();
+  const { addTransaction, updateTransaction, accounts, profiles, creditAccounts, addProfile, defaultProfileId } = useData();
   const navigate = useNavigate();
   const [type, setType] = useState<TransactionType>(editTransaction?.type || 'expense');
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
