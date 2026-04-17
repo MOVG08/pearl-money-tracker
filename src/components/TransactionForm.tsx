@@ -5,7 +5,8 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionT
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X, CreditCard, User } from 'lucide-react';
+import { Search, Plus, X, CreditCard, User, Landmark } from 'lucide-react';
+import { getCategoryIcon } from '@/lib/categoryIcons';
 
 interface Props {
   onClose: () => void;
@@ -58,8 +59,10 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
 
   if (accounts.length === 0) {
     return (
-      <div className="glass rounded-2xl p-6 space-y-4 text-center">
-        <p className="text-3xl">🏦</p>
+      <div className="elegant-card rounded-2xl p-6 space-y-4 text-center">
+        <span className="inline-flex w-14 h-14 rounded-2xl bg-secondary border border-border/60 items-center justify-center text-foreground">
+          <Landmark className="w-6 h-6" />
+        </span>
         <p className="text-foreground font-medium">{t('accounts.needAccount')}</p>
         <button onClick={() => { onClose(); navigate('/accounts'); }} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-medium">
           {t('accounts.add')}
@@ -114,7 +117,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
+    <form onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
       {/* Type toggle */}
       <div>
         <div className="flex gap-2 bg-secondary rounded-xl p-1">

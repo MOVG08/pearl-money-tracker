@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, CREDIT_TYPES } from '@/types/database';
+import { CategoryIcon } from '@/lib/categoryIcons';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, CreditCard } from 'lucide-react';
@@ -49,8 +50,8 @@ const CreditAccountDetailPage: React.FC = () => {
       </button>
 
       {/* Header */}
-      <div className="glass rounded-2xl p-5 text-center space-y-1">
-        <span className="inline-flex w-12 h-12 rounded-2xl bg-secondary items-center justify-center text-foreground">
+      <div className="elegant-card rounded-2xl p-5 text-center space-y-1">
+        <span className="inline-flex w-12 h-12 rounded-2xl bg-secondary items-center justify-center text-foreground border border-border/50">
           {(() => { const Icon = ct?.Icon ?? CreditCard; return <Icon className="w-6 h-6" />; })()}
         </span>
         <h1 className="text-xl font-semibold text-foreground">{creditAccount.name}</h1>
@@ -61,16 +62,16 @@ const CreditAccountDetailPage: React.FC = () => {
       {isCard ? (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="elegant-card rounded-xl p-4 text-center">
               <p className="text-xs text-muted-foreground">{t('credit.availableCredit')}</p>
               <p className="text-lg font-mono font-semibold text-success">{formatCurrency(cardBal!.availableCredit)}</p>
             </div>
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="elegant-card rounded-xl p-4 text-center">
               <p className="text-xs text-muted-foreground">{t('credit.totalSpent')}</p>
               <p className="text-lg font-mono font-semibold text-destructive">{formatCurrency(cardBal!.totalSpent)}</p>
             </div>
           </div>
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="elegant-card rounded-xl p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('credit.creditLimit')}</p>
             <p className="text-lg font-mono font-semibold text-foreground">{formatCurrency(creditAccount.credit_limit)}</p>
           </div>
@@ -78,16 +79,16 @@ const CreditAccountDetailPage: React.FC = () => {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="elegant-card rounded-xl p-4 text-center">
               <p className="text-xs text-muted-foreground">{t('credit.remaining')}</p>
               <p className="text-lg font-mono font-semibold text-destructive">{formatCurrency(loanBal!.remaining)}</p>
             </div>
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="elegant-card rounded-xl p-4 text-center">
               <p className="text-xs text-muted-foreground">{t('credit.paid')}</p>
               <p className="text-lg font-mono font-semibold text-success">{formatCurrency(loanBal!.paid)}</p>
             </div>
           </div>
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="elegant-card rounded-xl p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('credit.borrowed')}</p>
             <p className="text-lg font-mono font-semibold text-foreground">{formatCurrency(loanBal!.borrowed)}</p>
           </div>
@@ -95,7 +96,7 @@ const CreditAccountDetailPage: React.FC = () => {
       )}
 
       {/* Editable dates */}
-      <div className="glass rounded-xl p-4 space-y-3">
+      <div className="elegant-card rounded-xl p-4 space-y-3">
         {isCard && (
           <>
             <div className="flex items-center justify-between gap-3 text-sm">
@@ -158,9 +159,12 @@ const CreditAccountDetailPage: React.FC = () => {
 
             return (
               <motion.div key={tx.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
-                className="glass rounded-xl p-4 flex items-center gap-3"
+                className="elegant-card rounded-xl p-4 flex items-center gap-3"
               >
-                <span className="text-xl">{isPayment ? '✅' : cat?.icon || '💰'}</span>
+                <CategoryIcon
+                  category={isPayment ? 'payment_done' : tx.category}
+                  type={isPayment ? 'payment' : 'expense'}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{isPayment ? t('transactions.cardPayment') : cat?.name || tx.category}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

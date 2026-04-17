@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
-import { Plus, Trash2, Pencil, History, ChevronDown, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Pencil, History, ChevronDown, ArrowRight, BarChart3, CreditCard } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type Transaction } from '@/types/database';
+import { CategoryIcon } from '@/lib/categoryIcons';
 import TransactionForm from '@/components/TransactionForm';
 import { isDefaultProfile } from '@/contexts/DataContext';
 
@@ -115,8 +116,10 @@ const TransactionsPage: React.FC = () => {
       )}
 
       {transactions.length === 0 ? (
-        <div className="text-center py-16 space-y-2">
-          <p className="text-4xl">📊</p>
+        <div className="text-center py-16 space-y-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary border border-border/60 text-muted-foreground">
+            <BarChart3 className="w-7 h-7" />
+          </div>
           <p className="text-foreground font-medium">{t('transactions.noTransactions')}</p>
           <p className="text-sm text-muted-foreground">{t('transactions.addFirst')}</p>
         </div>
@@ -136,7 +139,10 @@ const TransactionsPage: React.FC = () => {
             return (
               <motion.div key={tx.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="elegant-card rounded-xl overflow-hidden">
                 <div className="p-4 flex items-center gap-3">
-                  <span className="text-xl">{isTransfer ? '🔄' : cat?.icon || '💰'}</span>
+                  <CategoryIcon
+                    category={isTransfer ? 'transfer' : tx.category}
+                    type={isTransfer ? 'transfer' : tx.type === 'income' ? 'income' : 'expense'}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium text-foreground truncate">
@@ -155,12 +161,16 @@ const TransactionsPage: React.FC = () => {
                         </button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
                       {!isTransfer && acc && <span>• {acc.name}</span>}
-                      {!isTransfer && !acc && creditAcc && <span>• 💳 {creditAcc.name}</span>}
+                      {!isTransfer && !acc && creditAcc && (
+                        <span className="inline-flex items-center gap-1">• <CreditCard className="w-3 h-3" /> {creditAcc.name}</span>
+                      )}
                       {profile && <span>• {profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</span>}
-                      {acc && creditAcc && <span>• 💳 {creditAcc.name}</span>}
+                      {acc && creditAcc && (
+                        <span className="inline-flex items-center gap-1">• <CreditCard className="w-3 h-3" /> {creditAcc.name}</span>
+                      )}
                     </div>
                     {tx.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{tx.notes}</p>}
                   </div>
