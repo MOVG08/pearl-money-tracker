@@ -250,7 +250,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                     const Icon = PROFILE_TYPES.find(pt => pt.value === p.type)?.Icon ?? User;
                     return (
                       <button key={p.id} type="button"
-                        onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
+                        onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); setProfileError(false); }}
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                       >
                         <Icon className="w-4 h-4" /><span>{p.name}</span>
