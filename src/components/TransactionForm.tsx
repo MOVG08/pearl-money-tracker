@@ -222,11 +222,18 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       {/* Profile selector (not for transfers) */}
       {type !== 'transfer' && (
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')} *</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
-              {(() => { const Icon = PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User; return <Icon className="w-4 h-4 text-foreground" />; })()}
-              <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
+              {(() => {
+                const isDefault = selectedProfile.id === defaultProfileId;
+                const Icon = isDefault ? User : (PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User);
+                const label = isDefault ? t('profiles.noProfileOption') : selectedProfile.name;
+                return (<>
+                  <Icon className="w-4 h-4 text-foreground" />
+                  <span className="text-sm font-medium text-foreground flex-1">{label}</span>
+                </>);
+              })()}
               <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
@@ -243,6 +250,14 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               </div>
               {showProfileDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  {defaultProfileId && (
+                    <button type="button"
+                      onClick={() => { setProfileId(defaultProfileId); setShowProfileDropdown(false); setProfileSearch(''); setProfileError(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors border-b border-border"
+                    >
+                      <User className="w-4 h-4" /><span>{t('profiles.noProfileOption')}</span>
+                    </button>
+                  )}
                   {filteredProfiles.map(p => {
                     const Icon = PROFILE_TYPES.find(pt => pt.value === p.type)?.Icon ?? User;
                     return (
@@ -287,9 +302,6 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                 <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">{t('profiles.save')}</button>
               </div>
             </div>
-          )}
-          {profileError && !profileId && (
-            <p className="text-xs text-destructive mt-1.5">{t('profiles.required')}</p>
           )}
         </div>
       )}
