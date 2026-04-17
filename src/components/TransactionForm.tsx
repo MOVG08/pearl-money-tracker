@@ -88,6 +88,12 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     if (type !== 'transfer' && !category) return;
     if (type !== 'expense' && !accountId) return; // income/transfer must use a regular account
     if (type === 'expense' && !accountId && !creditAccountId) return;
+    // Profile is required for income/expense (transfers are between own accounts).
+    if (type !== 'transfer' && !profileId) {
+      setProfileError(true);
+      setShowProfileDropdown(true);
+      return;
+    }
 
     // Determine final credit_account_id:
     // - if source is a credit card: that card is the source (charge)
