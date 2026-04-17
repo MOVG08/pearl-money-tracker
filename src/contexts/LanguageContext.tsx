@@ -77,7 +77,7 @@ const translations: Translations = {
   'transactions.selectCreditAccount': { es: 'Seleccionar tarjeta/crédito', en: 'Select credit account' },
   'transactions.payToCard': { es: 'Aplicar pago a tarjeta', en: 'Apply payment to card' },
   // Accounts
-  'accounts.title': { es: 'Cuentas', en: 'Accounts' },
+  'accounts.title': { es: 'Cuentas Personales', en: 'Personal Accounts' },
   'accounts.add': { es: 'Nueva cuenta', en: 'New account' },
   'accounts.name': { es: 'Nombre de la cuenta', en: 'Account name' },
   'accounts.type': { es: 'Tipo de cuenta', en: 'Account type' },
@@ -99,7 +99,7 @@ const translations: Translations = {
   'profileType.business': { es: 'Empresa', en: 'Business' },
   'profileType.bank': { es: 'Banco', en: 'Bank' },
   // Profiles
-  'profiles.title': { es: 'Perfiles', en: 'Profiles' },
+  'profiles.title': { es: 'Contactos', en: 'Contacts' },
   'profiles.add': { es: 'Nuevo perfil', en: 'New profile' },
   'profiles.name': { es: 'Nombre del perfil', en: 'Profile name' },
   'profiles.type': { es: 'Tipo de perfil', en: 'Profile type' },
