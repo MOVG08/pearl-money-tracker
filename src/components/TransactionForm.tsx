@@ -291,6 +291,9 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               </div>
             </div>
           )}
+          {profileError && !profileId && (
+            <p className="text-xs text-destructive mt-1.5">{t('profiles.required')}</p>
+          )}
         </div>
       )}
 
