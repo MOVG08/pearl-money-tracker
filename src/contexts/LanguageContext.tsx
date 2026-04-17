@@ -35,7 +35,7 @@ const translations: Translations = {
   'dashboard.filters': { es: 'Filtros', en: 'Filters' },
   'dashboard.allAccounts': { es: 'Todas las cuentas', en: 'All accounts' },
   'dashboard.allProfiles': { es: 'Todos los perfiles', en: 'All profiles' },
-  'dashboard.noProfile': { es: 'Sin perfil', en: 'No profile' },
+  'dashboard.noProfile': { es: 'Usuario', en: 'User' },
   'dashboard.from': { es: 'Desde', en: 'From' },
   'dashboard.to': { es: 'Hasta', en: 'To' },
   'dashboard.history': { es: 'Historial', en: 'History' },
