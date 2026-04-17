@@ -134,7 +134,7 @@ const TransactionsPage: React.FC = () => {
             const isTransfer = tx.type === 'transfer';
 
             return (
-              <motion.div key={tx.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="glass rounded-xl overflow-hidden">
+              <motion.div key={tx.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="elegant-card rounded-xl overflow-hidden">
                 <div className="p-4 flex items-center gap-3">
                   <span className="text-xl">{isTransfer ? '🔄' : cat?.icon || '💰'}</span>
                   <div className="flex-1 min-w-0">

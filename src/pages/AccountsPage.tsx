@@ -82,7 +82,7 @@ const AccountsPage: React.FC = () => {
         </div>
 
         {showForm && (
-          <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
+          <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
             <Input placeholder={t('accounts.name')} value={name} onChange={(e) => setName(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" required />
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">{t('accounts.type')}</label>
@@ -116,9 +116,9 @@ const AccountsPage: React.FC = () => {
               return (
                 <motion.div key={acc.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/accounts/${acc.id}`)}
-                  className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                  className="elegant-card rounded-xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
                 >
-                  <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground"><Icon className="w-5 h-5" /></span>
+                  <span className="icon-chip"><Icon className="w-5 h-5" /></span>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">{acc.name}</p>
                     <p className="text-xs text-muted-foreground">{at ? t(at.labelKey) : acc.type}</p>
@@ -144,7 +144,7 @@ const AccountsPage: React.FC = () => {
         </div>
 
         {showCreditForm && (
-          <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} onSubmit={handleCreditSubmit} className="glass rounded-2xl p-5 space-y-4">
+          <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} onSubmit={handleCreditSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
             <Input placeholder={t('credit.name')} value={creditName} onChange={(e) => setCreditName(e.target.value)} className="h-12 bg-secondary border-border/50 rounded-xl" required />
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">{t('credit.type')}</label>
@@ -212,10 +212,10 @@ const AccountsPage: React.FC = () => {
               return (
                 <motion.div key={ca.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/credit-accounts/${ca.id}`)}
-                  className="glass rounded-xl p-4 space-y-2 cursor-pointer active:scale-[0.98] transition-transform"
+                  className="elegant-card rounded-xl p-4 space-y-2 cursor-pointer active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground">
+                    <span className="icon-chip">
                       {(() => { const Icon = ct?.Icon ?? CreditCard; return <Icon className="w-5 h-5" />; })()}
                     </span>
                     <div className="flex-1">

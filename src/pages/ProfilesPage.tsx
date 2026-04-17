@@ -52,7 +52,7 @@ const ProfilesPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{t('profiles.title')}</h1>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">{t('profiles.title')}</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium active:scale-95 transition-transform"
@@ -63,7 +63,7 @@ const ProfilesPage: React.FC = () => {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
           <Input
             placeholder={t('profiles.name')}
             value={name}
@@ -114,9 +114,9 @@ const ProfilesPage: React.FC = () => {
               <Card
                 key={profile.id}
                 onClick={() => navigate(`/profiles/${profile.id}`)}
-                className="flex items-center gap-3 p-4 rounded-xl bg-card border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
+                className="elegant-card flex items-center gap-3 p-4 rounded-xl cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-foreground">
+                <span className="icon-chip">
                   <Icon className="w-5 h-5" />
                 </span>
                 <div className="flex-1 min-w-0">
