@@ -15,7 +15,7 @@ interface Props {
 
 const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const { t } = useLanguage();
-  const { addTransaction, updateTransaction, accounts, profiles, creditAccounts, addProfile } = useData();
+  const { addTransaction, updateTransaction, accounts, profiles, creditAccounts, addProfile, defaultProfileId } = useData();
   const navigate = useNavigate();
   const [type, setType] = useState<TransactionType>(editTransaction?.type || 'expense');
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '');
@@ -89,12 +89,9 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     if (type !== 'transfer' && !category) return;
     if (type !== 'expense' && !accountId) return; // income/transfer must use a regular account
     if (type === 'expense' && !accountId && !creditAccountId) return;
-    // Profile is required for income/expense (transfers are between own accounts).
-    if (type !== 'transfer' && !profileId) {
-      setProfileError(true);
-      setShowProfileDropdown(true);
-      return;
-    }
+
+    // Profile is optional now: fall back to the per-user default ("Usuario") bucket.
+    const finalProfileId = type === 'transfer' ? undefined : (profileId || defaultProfileId || undefined);
 
     // Determine final credit_account_id:
     // - if source is a credit card: that card is the source (charge)
@@ -108,7 +105,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       amount: parseFloat(amount),
       category: type === 'transfer' ? 'transfer' : category,
       account_id: source.kind === 'account' ? accountId : null,
-      profile_id: profileId || undefined,
+      profile_id: finalProfileId,
       destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
       credit_account_id: finalCreditAccountId,
       date,
@@ -225,11 +222,18 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       {/* Profile selector (not for transfers) */}
       {type !== 'transfer' && (
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')} *</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
-              {(() => { const Icon = PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User; return <Icon className="w-4 h-4 text-foreground" />; })()}
-              <span className="text-sm font-medium text-foreground flex-1">{selectedProfile.name}</span>
+              {(() => {
+                const isDefault = selectedProfile.id === defaultProfileId;
+                const Icon = isDefault ? User : (PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User);
+                const label = isDefault ? t('profiles.noProfileOption') : selectedProfile.name;
+                return (<>
+                  <Icon className="w-4 h-4 text-foreground" />
+                  <span className="text-sm font-medium text-foreground flex-1">{label}</span>
+                </>);
+              })()}
               <button type="button" onClick={() => { setProfileId(''); setProfileSearch(''); }} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
@@ -246,6 +250,14 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
               </div>
               {showProfileDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  {defaultProfileId && (
+                    <button type="button"
+                      onClick={() => { setProfileId(defaultProfileId); setShowProfileDropdown(false); setProfileSearch(''); setProfileError(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors border-b border-border"
+                    >
+                      <User className="w-4 h-4" /><span>{t('profiles.noProfileOption')}</span>
+                    </button>
+                  )}
                   {filteredProfiles.map(p => {
                     const Icon = PROFILE_TYPES.find(pt => pt.value === p.type)?.Icon ?? User;
                     return (
@@ -290,9 +302,6 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                 <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">{t('profiles.save')}</button>
               </div>
             </div>
-          )}
-          {profileError && !profileId && (
-            <p className="text-xs text-destructive mt-1.5">{t('profiles.required')}</p>
           )}
         </div>
       )}
