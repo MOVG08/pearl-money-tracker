@@ -225,7 +225,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       {/* Profile selector (not for transfers) */}
       {type !== 'transfer' && (
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')} *</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
               {(() => { const Icon = PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User; return <Icon className="w-4 h-4 text-foreground" />; })()}
