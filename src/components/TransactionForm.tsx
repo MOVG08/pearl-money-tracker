@@ -42,6 +42,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileType, setNewProfileType] = useState<'person' | 'business' | 'bank'>('person');
+  const [profileError, setProfileError] = useState(false);
 
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
