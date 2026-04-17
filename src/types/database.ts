@@ -54,6 +54,10 @@ export interface Transaction {
   date: string;
   created_at: string;
   updated_at: string;
+  /** Embedded relation when fetched via select with joins. */
+  account?: Pick<Account, 'id' | 'name' | 'type' | 'currency'> | null;
+  /** Embedded relation when fetched via select with joins. */
+  profile?: Pick<Profile, 'id' | 'name' | 'type'> | null;
 }
 
 export interface TransactionEdit {

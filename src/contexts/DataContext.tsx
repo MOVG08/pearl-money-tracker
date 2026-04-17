@@ -57,7 +57,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const [txRes, accRes, profRes, histRes, creditRes] = await Promise.all([
-        supabase.from('transactions').select('*').order('date', { ascending: false }),
+        // Embed related account and profile so consumers always have context.
+        supabase
+          .from('transactions')
+          .select('*, account:accounts!transactions_account_id_fkey(id,name,type,currency), profile:profiles!transactions_profile_id_fkey(id,name,type)')
+          .order('date', { ascending: false }),
         supabase.from('accounts').select('*').order('created_at', { ascending: true }),
         supabase.from('profiles').select('*').order('name', { ascending: true }),
         supabase.from('transaction_edits').select('*').order('edited_at', { ascending: false }),
@@ -154,9 +158,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const addTransaction = async (tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return;
-    const profile_id = tx.profile_id || defaultProfileId || undefined;
-    const { data, error } = await supabase.from('transactions').insert({ ...tx, profile_id, user_id: user.id }).select().single();
+    if (!user) {
+      toast.error('You must be signed in');
+      return;
+    }
+    // Validate: every transaction must have a source (account or credit account).
+    if (!tx.account_id && !tx.credit_account_id) {
+      toast.error('Please select an account');
+      return;
+    }
+    // Validate: income/expense must have a profile (transfers are between own accounts).
+    if (tx.type !== 'transfer' && !tx.profile_id) {
+      toast.error('Please select a profile');
+      return;
+    }
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({ ...tx, user_id: user.id })
+      .select('*, account:accounts!transactions_account_id_fkey(id,name,type,currency), profile:profiles!transactions_profile_id_fkey(id,name,type)')
+      .single();
     if (error) { toast.error(error.message); return; }
     setTransactions(prev => [data as Transaction, ...prev]);
   };
@@ -164,7 +184,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateTransaction = async (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
     const current = transactions.find(t => t.id === id);
     if (!current) return;
-    const { data, error } = await supabase.from('transactions').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+    const { data, error } = await supabase.from('transactions').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select('*, account:accounts!transactions_account_id_fkey(id,name,type,currency), profile:profiles!transactions_profile_id_fkey(id,name,type)').single();
     if (error) { toast.error(error.message); return; }
     const edits: { transaction_id: string; field: string; old_value: string; new_value: string }[] = [];
     for (const [field, newValue] of Object.entries(updates)) {

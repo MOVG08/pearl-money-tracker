@@ -42,6 +42,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileType, setNewProfileType] = useState<'person' | 'business' | 'bank'>('person');
+  const [profileError, setProfileError] = useState(false);
 
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
@@ -74,7 +75,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const handleQuickCreateProfile = async () => {
     if (!newProfileName.trim()) return;
     const newProfile = await addProfile({ name: newProfileName.trim(), type: newProfileType });
-    if (newProfile) setProfileId(newProfile.id);
+    if (newProfile) { setProfileId(newProfile.id); setProfileError(false); }
     setNewProfileName('');
     setShowQuickCreate(false);
     setShowProfileDropdown(false);
@@ -88,6 +89,12 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     if (type !== 'transfer' && !category) return;
     if (type !== 'expense' && !accountId) return; // income/transfer must use a regular account
     if (type === 'expense' && !accountId && !creditAccountId) return;
+    // Profile is required for income/expense (transfers are between own accounts).
+    if (type !== 'transfer' && !profileId) {
+      setProfileError(true);
+      setShowProfileDropdown(true);
+      return;
+    }
 
     // Determine final credit_account_id:
     // - if source is a credit card: that card is the source (charge)
@@ -218,7 +225,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       {/* Profile selector (not for transfers) */}
       {type !== 'transfer' && (
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')} *</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
               {(() => { const Icon = PROFILE_TYPES.find(pt => pt.value === selectedProfile.type)?.Icon ?? User; return <Icon className="w-4 h-4 text-foreground" />; })()}
@@ -243,7 +250,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                     const Icon = PROFILE_TYPES.find(pt => pt.value === p.type)?.Icon ?? User;
                     return (
                       <button key={p.id} type="button"
-                        onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); }}
+                        onClick={() => { setProfileId(p.id); setShowProfileDropdown(false); setProfileSearch(''); setProfileError(false); }}
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                       >
                         <Icon className="w-4 h-4" /><span>{p.name}</span>
@@ -283,6 +290,9 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                 <button type="button" onClick={handleQuickCreateProfile} className="flex-1 py-2 rounded-lg text-xs bg-primary text-primary-foreground">{t('profiles.save')}</button>
               </div>
             </div>
+          )}
+          {profileError && !profileId && (
+            <p className="text-xs text-destructive mt-1.5">{t('profiles.required')}</p>
           )}
         </div>
       )}

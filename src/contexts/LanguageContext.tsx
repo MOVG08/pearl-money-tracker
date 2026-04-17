@@ -114,6 +114,7 @@ const translations: Translations = {
   'profiles.movements': { es: 'Movimientos', en: 'Movements' },
   'profiles.cannotDelete': { es: 'No se puede eliminar', en: 'Cannot delete' },
   'profiles.unassignFirst': { es: 'No se puede borrar un perfil con movimientos asignados. Desasigna sus movimientos primero.', en: 'Cannot delete a profile with assigned transactions. Unassign its transactions first.' },
+  'profiles.required': { es: 'Selecciona un contacto para continuar', en: 'Please select a contact to continue' },
   // Credit accounts
   'credit.title': { es: 'Tarjetas de crédito y préstamos', en: 'Credit cards & loans' },
   'credit.add': { es: 'Nuevo crédito', en: 'New credit' },
