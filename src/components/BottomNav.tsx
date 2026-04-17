@@ -17,7 +17,7 @@ const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/85 backdrop-blur-xl border-t border-border/60 safe-area-bottom shadow-[0_-8px_24px_-12px_hsl(220_40%_5%/0.25)]">
       <div className="max-w-lg mx-auto flex">
         {tabs.map(tab => {
           const active = tab.path === '/' ? location.pathname === '/' : location.pathname.startsWith(tab.path);

@@ -121,12 +121,12 @@ const DashboardPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={() => toggleCard(card.key)}
-                className={`summary-card summary-card--${card.variant} rounded-2xl p-5 pl-6 cursor-pointer active:scale-[0.99] transition-transform`}
+                className={`summary-card summary-card--${card.variant} rounded-2xl p-5 cursor-pointer active:scale-[0.99] transition-transform`}
               >
-                <div className="relative flex items-start justify-between gap-4">
+                <div className="relative flex items-start justify-between gap-4 pt-1">
                   <div className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">{card.label}</p>
-                    <p className="text-[26px] leading-tight font-semibold font-mono mt-1.5 text-foreground tracking-tight">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">{card.label}</p>
+                    <p className="text-[26px] leading-tight font-semibold font-mono mt-1.5 summary-card__amount tracking-tight">
                       {formatCurrency(card.value)}
                     </p>
                     <p className="text-[11px] text-muted-foreground/70 mt-2">{t('dashboard.tapToSee')}</p>
@@ -198,12 +198,12 @@ const DashboardPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             onClick={() => toggleCard('balance')}
-            className="summary-card summary-card--balance rounded-2xl p-5 pl-6 cursor-pointer active:scale-[0.99] transition-transform"
+            className="summary-card summary-card--balance rounded-2xl p-5 cursor-pointer active:scale-[0.99] transition-transform"
           >
-            <div className="relative flex items-start justify-between gap-4">
+            <div className="relative flex items-start justify-between gap-4 pt-1">
               <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">{t('dashboard.balance')}</p>
-                <p className="text-[26px] leading-tight font-semibold font-mono mt-1.5 text-foreground tracking-tight">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">{t('dashboard.balance')}</p>
+                <p className="text-[26px] leading-tight font-semibold font-mono mt-1.5 summary-card__amount tracking-tight">
                   {formatCurrency(balance)}
                 </p>
                 <p className="text-[11px] text-muted-foreground/70 mt-2">{t('dashboard.tapToSee')}</p>

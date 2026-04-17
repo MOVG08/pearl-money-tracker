@@ -39,7 +39,7 @@ const SettingsPage: React.FC = () => {
     <div className="space-y-4 pb-24">
       <h1 className="text-2xl font-semibold text-foreground tracking-tight">{t('settings.title')}</h1>
 
-      <div className="glass rounded-2xl p-4 space-y-3">
+      <div className="elegant-card rounded-2xl p-4 space-y-3">
         <div className="flex items-center gap-3">
           <User className="w-5 h-5 text-muted-foreground" />
           <span className="text-sm text-foreground">{t('settings.name')}</span>
@@ -61,7 +61,7 @@ const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="glass rounded-2xl divide-y divide-border">
+      <div className="elegant-card rounded-2xl divide-y divide-border/60">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Globe className="w-5 h-5 text-muted-foreground" />
@@ -106,7 +106,7 @@ const SettingsPage: React.FC = () => {
 
       <button
         onClick={signOut}
-        className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-destructive"
+        className="w-full elegant-card rounded-2xl p-4 flex items-center gap-3 text-destructive"
       >
         <LogOut className="w-5 h-5" />
         <span className="text-sm font-medium">{t('settings.logout')}</span>
