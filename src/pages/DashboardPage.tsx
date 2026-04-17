@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/database';
+import { CategoryIcon } from '@/lib/categoryIcons';
 import { format } from 'date-fns';
 
 const CHART_COLORS = ['#3b82f6', '#22c55e', '#ef4444', '#f97316', '#eab308', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
@@ -144,7 +145,7 @@ const DashboardPage: React.FC = () => {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="glass rounded-2xl p-5 mt-2">
+                    <div className="elegant-card rounded-2xl p-5 mt-2">
                       <h3 className="text-sm font-medium text-foreground mb-3">
                         {card.key === 'income' ? t('dashboard.incomeByProfile') : t('dashboard.expenseByProfile')}
                       </h3>
@@ -221,7 +222,7 @@ const DashboardPage: React.FC = () => {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="glass rounded-2xl p-5 mt-2">
+                <div className="elegant-card rounded-2xl p-5 mt-2">
                   <h3 className="text-sm font-medium text-foreground mb-3">{t('dashboard.balanceByAccount')}</h3>
                   <div className="flex items-center gap-4">
                     <div className="w-28 h-28">
@@ -261,8 +262,8 @@ const DashboardPage: React.FC = () => {
 
       {/* Balance line chart */}
       {balanceData.length > 1 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-5">
-          <h2 className="text-base font-medium text-foreground mb-4">{t('dashboard.balanceOverTime')}</h2>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="elegant-card rounded-2xl p-5">
+          <h2 className="section-title mb-4">{t('dashboard.balanceOverTime')}</h2>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={balanceData}>
@@ -281,7 +282,7 @@ const DashboardPage: React.FC = () => {
 
       {/* History */}
       <div className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">{t('dashboard.history')}</h2>
+        <h2 className="section-title">{t('dashboard.history')}</h2>
         {monthlyTx.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('transactions.noTransactions')}</p>
         ) : (
@@ -294,9 +295,9 @@ const DashboardPage: React.FC = () => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="glass rounded-xl p-4 flex items-center gap-3"
+                className="elegant-card rounded-xl p-4 flex items-center gap-3"
               >
-                <span className="text-xl">{cat?.icon || '💰'}</span>
+                <CategoryIcon category={tx.category} type={tx.type === 'income' ? 'income' : 'expense'} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{cat?.name || tx.category}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

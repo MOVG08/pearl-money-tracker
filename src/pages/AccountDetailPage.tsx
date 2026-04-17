@@ -6,6 +6,7 @@ import { useData } from '@/contexts/DataContext';
 import { ArrowLeft, TrendingUp, TrendingDown, Folder } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, ACCOUNT_TYPES } from '@/types/database';
+import { CategoryIcon } from '@/lib/categoryIcons';
 import { format } from 'date-fns';
 
 const CHART_COLORS = ['#3b82f6', '#22c55e', '#ef4444', '#f97316', '#eab308', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
@@ -197,9 +198,12 @@ const AccountDetailPage: React.FC = () => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="glass rounded-xl p-4 flex items-center gap-3"
+                className="elegant-card rounded-xl p-4 flex items-center gap-3"
               >
-                <span className="text-xl">{tx.type === 'transfer' ? '🔄' : (cat?.icon || '💰')}</span>
+                <CategoryIcon
+                  category={tx.type === 'transfer' ? 'transfer' : tx.category}
+                  type={tx.type === 'transfer' ? 'transfer' : tx.type === 'income' ? 'income' : 'expense'}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
                     {tx.type === 'transfer' ? t('transactions.transfer') : (cat?.name || tx.category)}

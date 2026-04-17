@@ -5,7 +5,8 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES, type TransactionT
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, X, CreditCard, User } from 'lucide-react';
+import { Search, Plus, X, CreditCard, User, Landmark } from 'lucide-react';
+import { getCategoryIcon } from '@/lib/categoryIcons';
 
 interface Props {
   onClose: () => void;
@@ -58,8 +59,10 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
 
   if (accounts.length === 0) {
     return (
-      <div className="glass rounded-2xl p-6 space-y-4 text-center">
-        <p className="text-3xl">🏦</p>
+      <div className="elegant-card rounded-2xl p-6 space-y-4 text-center">
+        <span className="inline-flex w-14 h-14 rounded-2xl bg-secondary border border-border/60 items-center justify-center text-foreground">
+          <Landmark className="w-6 h-6" />
+        </span>
         <p className="text-foreground font-medium">{t('accounts.needAccount')}</p>
         <button onClick={() => { onClose(); navigate('/accounts'); }} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-medium">
           {t('accounts.add')}
@@ -114,7 +117,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
+    <form onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
       {/* Type toggle */}
       <div>
         <div className="flex gap-2 bg-secondary rounded-xl p-1">
@@ -185,8 +188,8 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
                 {creditAccounts.filter(c => c.credit_type === 'credit_card').map(ca => (
                   <button key={ca.id} type="button"
                     onClick={() => setSource({ kind: 'credit', id: ca.id })}
-                    className={`px-3 py-2 rounded-lg text-sm transition-all ${source.kind === 'credit' && source.id === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-                  >💳 {ca.name}</button>
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all ${source.kind === 'credit' && source.id === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+                  ><CreditCard className="w-3.5 h-3.5" />{ca.name}</button>
                 ))}
               </div>
             </div>
@@ -289,16 +292,20 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
           <div className="grid grid-cols-3 gap-2">
-            {categories.map(cat => (
-              <button key={cat.id} type="button" onClick={() => setCategory(cat.id)}
-                className={`flex flex-col items-center gap-1 p-3 rounded-xl text-xs transition-all ${
-                  category === cat.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                }`}
-              >
-                <span className="text-lg">{cat.icon}</span>
-                <span className="truncate w-full text-center">{cat.name}</span>
-              </button>
-            ))}
+            {categories.map(cat => {
+              const Icon = getCategoryIcon(cat.id);
+              const selected = category === cat.id;
+              return (
+                <button key={cat.id} type="button" onClick={() => setCategory(cat.id)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs transition-all border ${
+                    selected ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-secondary-foreground border-transparent'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="truncate w-full text-center">{cat.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -312,8 +319,8 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <div className="flex gap-2 flex-wrap">
             {creditAccounts.map(ca => (
               <button key={ca.id} type="button" onClick={() => setPaymentCardId(ca.id)}
-                className={`px-3 py-2 rounded-lg text-sm transition-all ${paymentCardId === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-              >💳 {ca.name}</button>
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all ${paymentCardId === ca.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+              ><CreditCard className="w-3.5 h-3.5" />{ca.name}</button>
             ))}
           </div>
         </div>

@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { ArrowLeft, TrendingUp, TrendingDown, User } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_TYPES } from '@/types/database';
+import { CategoryIcon } from '@/lib/categoryIcons';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
@@ -56,21 +57,34 @@ const ProfileDetailPage: React.FC = () => {
 
       {/* Income / Expense cards */}
       <div className="grid grid-cols-2 gap-3">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="gradient-income rounded-2xl p-4 text-primary-foreground">
-          <TrendingUp className="w-5 h-5 opacity-60 mb-1" />
-          <p className="text-xs opacity-80">{t('dashboard.income')}</p>
-          <p className="text-lg font-semibold font-mono mt-0.5">{formatCurrency(income)}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="summary-card summary-card--income rounded-2xl p-4"
+        >
+          <div className="relative pt-1">
+            <span className="summary-card__icon mb-2"><TrendingUp className="w-4 h-4" /></span>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium">{t('dashboard.income')}</p>
+            <p className="text-lg font-semibold font-mono mt-0.5 summary-card__amount">{formatCurrency(income)}</p>
+          </div>
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="gradient-expense rounded-2xl p-4 text-primary-foreground">
-          <TrendingDown className="w-5 h-5 opacity-60 mb-1" />
-          <p className="text-xs opacity-80">{t('dashboard.expenses')}</p>
-          <p className="text-lg font-semibold font-mono mt-0.5">{formatCurrency(expenses)}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="summary-card summary-card--expense rounded-2xl p-4"
+        >
+          <div className="relative pt-1">
+            <span className="summary-card__icon mb-2"><TrendingDown className="w-4 h-4" /></span>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium">{t('dashboard.expenses')}</p>
+            <p className="text-lg font-semibold font-mono mt-0.5 summary-card__amount">{formatCurrency(expenses)}</p>
+          </div>
         </motion.div>
       </div>
 
       {/* Transactions */}
       <div className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">{t('profiles.movements')}</h2>
+        <h2 className="section-title">{t('profiles.movements')}</h2>
         {profileTx.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('transactions.noTransactions')}</p>
         ) : (
@@ -83,9 +97,9 @@ const ProfileDetailPage: React.FC = () => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="glass rounded-xl p-4 flex items-center gap-3"
+                className="elegant-card rounded-xl p-4 flex items-center gap-3"
               >
-                <span className="text-xl">{cat?.icon || '💰'}</span>
+                <CategoryIcon category={tx.category} type={tx.type === 'income' ? 'income' : 'expense'} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{cat?.name || tx.category}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

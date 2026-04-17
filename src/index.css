@@ -145,32 +145,36 @@
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 4px;
-    background: var(--accent-bar);
-    z-index: 1;
+    height: 6px;
+    background: var(--accent-solid);
+    box-shadow: 0 6px 18px -6px var(--accent-solid);
+    z-index: 2;
   }
-  /* Soft radial tint behind content */
+  /* Strong left side bar for extra visual cue */
+  .summary-card > .summary-card__sidebar,
   .summary-card::after {
     content: "";
     position: absolute;
     inset: 0;
     background: radial-gradient(120% 80% at 100% 0%, var(--accent-tint) 0%, transparent 55%);
-    opacity: 0.7;
+    opacity: 0.85;
     pointer-events: none;
+    z-index: 0;
   }
+  .summary-card > * { position: relative; z-index: 1; }
   .summary-card--income {
-    --accent-tint: hsl(var(--success) / 0.14);
-    --accent-bar: linear-gradient(90deg, hsl(var(--success)) 0%, hsl(142 71% 35%) 100%);
+    --accent-tint: hsl(var(--success) / 0.18);
+    --accent-solid: hsl(var(--success));
     --accent-color: hsl(var(--success));
   }
   .summary-card--expense {
-    --accent-tint: hsl(var(--destructive) / 0.14);
-    --accent-bar: linear-gradient(90deg, hsl(var(--destructive)) 0%, hsl(0 72% 40%) 100%);
+    --accent-tint: hsl(var(--destructive) / 0.18);
+    --accent-solid: hsl(var(--destructive));
     --accent-color: hsl(var(--destructive));
   }
   .summary-card--balance {
-    --accent-tint: hsl(var(--primary) / 0.16);
-    --accent-bar: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(250 80% 60%) 100%);
+    --accent-tint: hsl(var(--primary) / 0.20);
+    --accent-solid: hsl(var(--primary));
     --accent-color: hsl(var(--primary));
   }
   .summary-card__icon {
