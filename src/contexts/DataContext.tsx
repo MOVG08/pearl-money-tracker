@@ -57,7 +57,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const [txRes, accRes, profRes, histRes, creditRes] = await Promise.all([
-        supabase.from('transactions').select('*').order('date', { ascending: false }),
+        // Embed related account and profile so consumers always have context.
+        supabase
+          .from('transactions')
+          .select('*, account:accounts!transactions_account_id_fkey(id,name,type,currency), profile:profiles!transactions_profile_id_fkey(id,name,type)')
+          .order('date', { ascending: false }),
         supabase.from('accounts').select('*').order('created_at', { ascending: true }),
         supabase.from('profiles').select('*').order('name', { ascending: true }),
         supabase.from('transaction_edits').select('*').order('edited_at', { ascending: false }),
