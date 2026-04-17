@@ -184,7 +184,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateTransaction = async (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
     const current = transactions.find(t => t.id === id);
     if (!current) return;
-    const { data, error } = await supabase.from('transactions').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+    const { data, error } = await supabase.from('transactions').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select('*, account:accounts!transactions_account_id_fkey(id,name,type,currency), profile:profiles!transactions_profile_id_fkey(id,name,type)').single();
     if (error) { toast.error(error.message); return; }
     const edits: { transaction_id: string; field: string; old_value: string; new_value: string }[] = [];
     for (const [field, newValue] of Object.entries(updates)) {
