@@ -35,19 +35,20 @@ const DashboardPage: React.FC = () => {
     [transactions, currentMonth, currentYear]
   );
 
-  const groupByProfile = (type: 'income' | 'expense') => {
+  const groupByCategory = (type: 'income' | 'expense') => {
     const txs = monthlyTx.filter(tx => tx.type === type);
+    const categoryList = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
     const grouped: Record<string, number> = {};
     txs.forEach(tx => {
-      const key = tx.profile_id || '__none__';
+      const key = tx.category || '__none__';
       grouped[key] = (grouped[key] || 0) + tx.amount;
     });
     const total = Object.values(grouped).reduce((s, v) => s + v, 0);
     return Object.entries(grouped).map(([id, value]) => {
-      const profile = profiles.find(p => p.id === id);
+      const cat = categoryList.find(c => c.id === id);
       return {
-        profileId: profile ? profile.id : null,
-        name: !profile || profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name,
+        categoryId: id,
+        name: cat?.name || id,
         value,
         pct: total > 0 ? Math.round((value / total) * 100) : 0,
       };
