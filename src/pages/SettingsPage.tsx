@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,9 +38,20 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-24">
-      <h1 className="text-2xl font-semibold text-foreground tracking-tight">{t('settings.title')}</h1>
+      <motion.h1
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-2xl font-semibold text-foreground tracking-tight"
+      >
+        {t('settings.title')}
+      </motion.h1>
 
-      <div className="elegant-card rounded-2xl p-4 space-y-3">
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="elegant-card rounded-2xl p-4 space-y-3"
+      >
         <div className="flex items-center gap-3">
           <User className="w-5 h-5 text-muted-foreground" />
           <span className="text-sm text-foreground">{t('settings.name')}</span>
@@ -59,9 +71,14 @@ const SettingsPage: React.FC = () => {
             {t('settings.saveName')}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="elegant-card rounded-2xl divide-y divide-border/60">
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="elegant-card rounded-2xl divide-y divide-border/60"
+      >
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Globe className="w-5 h-5 text-muted-foreground" />
@@ -102,15 +119,18 @@ const SettingsPage: React.FC = () => {
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <button
+      <motion.button
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
         onClick={signOut}
         className="w-full elegant-card rounded-2xl p-4 flex items-center gap-3 text-destructive"
       >
         <LogOut className="w-5 h-5" />
         <span className="text-sm font-medium">{t('settings.logout')}</span>
-      </button>
+      </motion.button>
     </div>
   );
 };
