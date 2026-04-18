@@ -115,7 +115,7 @@ const DashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-3">
         {cards.map((card, i) => {
           const isExpanded = expandedCard === card.key;
-          const chartData = groupByProfile(card.key);
+          const chartData = groupByCategory(card.key);
           return (
             <div key={card.key}>
               <motion.div
