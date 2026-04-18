@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData, DEFAULT_PROFILE_SENTINEL } from '@/contexts/DataContext';
@@ -63,7 +64,7 @@ const ProfilesPage: React.FC = () => {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
+        <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
           <Input
             placeholder={t('profiles.name')}
             value={name}
@@ -97,7 +98,7 @@ const ProfilesPage: React.FC = () => {
               {t('profiles.save')}
             </button>
           </div>
-        </form>
+        </motion.form>
       )}
 
       {visibleProfiles.length === 0 ? (
@@ -108,28 +109,34 @@ const ProfilesPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {visibleProfiles.map(profile => {
+          {visibleProfiles.map((profile, i) => {
             const Icon = PROFILE_TYPES.find(pt => pt.value === profile.type)?.Icon ?? Users;
             return (
-              <Card
+              <motion.div
                 key={profile.id}
-                onClick={() => navigate(`/profiles/${profile.id}`)}
-                className="elegant-card flex items-center gap-3 p-4 rounded-xl cursor-pointer active:scale-[0.98] transition-transform"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
               >
-                <span className="icon-chip">
-                  <Icon className="w-5 h-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
-                  <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
-                </div>
-                <button
-                  onClick={(e) => handleDelete(profile.id, e)}
-                  className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                <Card
+                  onClick={() => navigate(`/profiles/${profile.id}`)}
+                  className="elegant-card flex items-center gap-3 p-4 rounded-xl cursor-pointer active:scale-[0.98] transition-transform"
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </Card>
+                  <span className="icon-chip">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{profile.name}</p>
+                    <p className="text-xs text-muted-foreground">{t(`profileType.${profile.type}`)}</p>
+                  </div>
+                  <button
+                    onClick={(e) => handleDelete(profile.id, e)}
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </Card>
+              </motion.div>
             );
           })}
         </div>
