@@ -148,7 +148,7 @@ const DashboardPage: React.FC = () => {
                   >
                     <div className="elegant-card rounded-2xl p-5 mt-2">
                       <h3 className="text-sm font-medium text-foreground mb-3">
-                        {card.key === 'income' ? t('dashboard.incomeByProfile') : t('dashboard.expenseByProfile')}
+                        {card.key === 'income' ? t('dashboard.incomeByCategory') : t('dashboard.expenseByCategory')}
                       </h3>
                       <div className="flex items-center gap-4">
                         <div className="w-28 h-28">
@@ -163,27 +163,19 @@ const DashboardPage: React.FC = () => {
                           </ResponsiveContainer>
                         </div>
                         <div className="flex-1 space-y-1.5">
-                          {chartData.map((item, idx) => {
-                            const clickable = !!item.profileId;
-                            return (
-                              <button
-                                key={item.name}
-                                type="button"
-                                disabled={!clickable}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (item.profileId) navigate(`/profiles/${item.profileId}`);
-                                }}
-                                className={`w-full flex items-center gap-2 text-sm rounded-md py-0.5 -mx-1 px-1 text-left ${clickable ? 'hover:bg-muted/50 active:scale-[0.98] transition-all cursor-pointer' : 'cursor-default'}`}
-                              >
-                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }} />
-                                <span className="text-muted-foreground truncate">{item.name}</span>
-                                <span className="ml-auto font-mono text-foreground text-xs">{item.pct}%</span>
-                                <span className="font-mono text-foreground text-xs">{formatCurrency(item.value)}</span>
-                              </button>
-                            );
-                          })}
+                          {chartData.map((item, idx) => (
+                            <div
+                              key={item.categoryId}
+                              className="w-full flex items-center gap-2 text-sm rounded-md py-0.5 -mx-1 px-1"
+                            >
+                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }} />
+                              <span className="text-muted-foreground truncate">{item.name}</span>
+                              <span className="ml-auto font-mono text-foreground text-xs">{item.pct}%</span>
+                              <span className="font-mono text-foreground text-xs">{formatCurrency(item.value)}</span>
+                            </div>
+                          ))}
                         </div>
+                      </div>
                       </div>
                     </div>
                   </motion.div>
