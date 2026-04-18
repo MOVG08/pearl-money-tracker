@@ -50,13 +50,20 @@ const AccountDetailPage: React.FC = () => {
   };
 
   const balanceData = useMemo(() => {
-    const sorted = [...nonTransferTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...accountTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     let cumulative = account?.balance ?? 0;
     return sorted.map(tx => {
-      cumulative += tx.type === 'income' ? tx.amount : -tx.amount;
+      if (tx.type === 'income') {
+        cumulative += tx.amount;
+      } else if (tx.type === 'expense') {
+        cumulative -= tx.amount;
+      } else if (tx.type === 'transfer') {
+        if (tx.account_id === id) cumulative -= tx.amount;
+        if (tx.destination_account_id === id) cumulative += tx.amount;
+      }
       return { date: format(new Date(tx.date), 'dd/MM'), balance: cumulative };
     });
-  }, [nonTransferTx, account]);
+  }, [accountTx, account, id]);
 
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
