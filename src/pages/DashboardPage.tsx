@@ -176,7 +176,6 @@ const DashboardPage: React.FC = () => {
                           ))}
                         </div>
                       </div>
-                      </div>
                     </div>
                   </motion.div>
                 )}
