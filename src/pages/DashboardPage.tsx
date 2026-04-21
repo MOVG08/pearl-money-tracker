@@ -150,8 +150,25 @@ const DashboardPage: React.FC = () => {
   const dateLocale = language === 'es' ? 'es-MX' : 'en-US';
   const todayLabel = now.toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' });
 
+  const rangeLabel = range === 'week' ? t('dashboard.range.week') : range === 'month' ? t('dashboard.thisMonth') : range === 'year' ? t('dashboard.range.year') : t('dashboard.range.all');
+
   return (
     <div className="space-y-5 pb-24">
+      {/* Global range selector */}
+      <div className="sticky top-0 z-20 -mx-4 px-4 pt-3 pb-2 bg-background/80 backdrop-blur-md">
+        <div className="flex bg-secondary rounded-xl p-1 text-xs">
+          {(['week', 'month', 'year', 'all'] as const).map(r => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`flex-1 px-3 py-1.5 rounded-lg transition-colors font-medium ${range === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+            >
+              {t(`dashboard.range.${r}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Hero header — date, greeting, summary */}
       <section className="min-h-[55vh] flex flex-col justify-between gap-5 pt-2">
         <div className="space-y-1">
@@ -159,7 +176,7 @@ const DashboardPage: React.FC = () => {
           <h1 className="text-3xl font-semibold text-foreground tracking-tight">
             {t('dashboard.hello')}{userName ? `, ${userName}` : ''}
           </h1>
-          <p className="text-sm text-muted-foreground pt-1">{t('dashboard.thisMonth')} · {t('dashboard.overview')}</p>
+          <p className="text-sm text-muted-foreground pt-1">{rangeLabel} · {t('dashboard.overview')}</p>
         </div>
 
         {/* Summary cards */}
