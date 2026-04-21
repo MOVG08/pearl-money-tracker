@@ -340,13 +340,52 @@ const DashboardPage: React.FC = () => {
         </motion.div>
       )}
 
+      {/* Income vs Expenses bars */}
+      {barsData.length > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="elegant-card rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+            <h2 className="section-title">{t('dashboard.incomeVsExpenses')}</h2>
+            <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+              {(['both', 'income', 'expense'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setBarsFilter(f)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${barsFilter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {f === 'both' ? t('dashboard.both') : f === 'income' ? t('dashboard.income') : t('dashboard.expenses')}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barsData}>
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
+                  formatter={(value: number, name) => [formatCurrency(value), name === 'income' ? t('dashboard.income') : t('dashboard.expenses')]}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => v === 'income' ? t('dashboard.income') : t('dashboard.expenses')} />
+                {(barsFilter === 'both' || barsFilter === 'income') && (
+                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                )}
+                {(barsFilter === 'both' || barsFilter === 'expense') && (
+                  <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[6, 6, 0, 0]} />
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
+
       {/* History */}
       <div className="space-y-3">
         <h2 className="section-title">{t('dashboard.history')}</h2>
-        {monthlyTx.length === 0 ? (
+        {periodTx.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('transactions.noTransactions')}</p>
         ) : (
-          monthlyTx.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tx, i) => {
+          periodTx.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tx, i) => {
             const cat = allCategories.find(c => c.id === tx.category);
             const profile = profiles.find(p => p.id === tx.profile_id);
             return (
