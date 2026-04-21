@@ -24,6 +24,9 @@ const AccountDetailPage: React.FC = () => {
   const accountType = ACCOUNT_TYPES.find(at => at.value === account?.type);
 
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | null>(null);
+  const [balanceRange, setBalanceRange] = useState<'month' | 'year' | 'all'>('month');
+  const [barsRange, setBarsRange] = useState<'month' | 'year' | 'all'>('month');
+  const [barsFilter, setBarsFilter] = useState<'both' | 'income' | 'expense'>('both');
 
   const accountTx = useMemo(() =>
     transactions.filter(tx => tx.account_id === id || tx.destination_account_id === id),
