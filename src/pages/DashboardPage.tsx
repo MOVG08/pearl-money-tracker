@@ -138,8 +138,8 @@ const DashboardPage: React.FC = () => {
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const cards = [
-    { key: 'income' as const, label: t('dashboard.income'), value: monthlyIncome, icon: TrendingUp, variant: 'income' },
-    { key: 'expense' as const, label: t('dashboard.expenses'), value: monthlyExpenses, icon: TrendingDown, variant: 'expense' },
+    { key: 'income' as const, label: t('dashboard.income'), value: periodIncome, icon: TrendingUp, variant: 'income' },
+    { key: 'expense' as const, label: t('dashboard.expenses'), value: periodExpenses, icon: TrendingDown, variant: 'expense' },
   ];
 
   const toggleCard = (key: 'income' | 'expense' | 'balance') => {
