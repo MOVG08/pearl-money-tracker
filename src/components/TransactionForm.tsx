@@ -120,9 +120,17 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     onClose();
   };
 
+  const isEdit = !!editTransaction;
+
   return (
     <form onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
+      {isEdit && (
+        <p className="text-xs text-muted-foreground bg-secondary/60 border border-border/50 rounded-lg px-3 py-2">
+          {t('transactions.editLimited')}
+        </p>
+      )}
       {/* Type toggle */}
+      {!isEdit && (
       <div>
         <div className="flex gap-2 bg-secondary rounded-xl p-1">
           {(['expense', 'income', 'transfer'] as const).map((t_type) => (
@@ -155,6 +163,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <p className="text-xs text-muted-foreground mt-1.5 text-center">{t('transactions.transferHint')}</p>
         )}
       </div>
+      )}
 
       {/* Amount */}
       <Input
@@ -202,7 +211,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       </div>
 
       {/* Destination Account (transfer only) */}
-      {type === 'transfer' && (
+      {!isEdit && type === 'transfer' && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.destinationAccount')}</label>
           <div className="flex gap-2 flex-wrap">
@@ -220,7 +229,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Profile selector (not for transfers) */}
-      {type !== 'transfer' && (
+      {!isEdit && type !== 'transfer' && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
@@ -307,7 +316,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Category (not for transfers) */}
-      {type !== 'transfer' && (
+      {!isEdit && type !== 'transfer' && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
           <div className="grid grid-cols-3 gap-2">
@@ -330,7 +339,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Card payment target (when paying a credit card from a regular account) */}
-      {type === 'expense' && category === 'debt_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
+      {!isEdit && type === 'expense' && category === 'debt_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1">
             <CreditCard className="w-3 h-3" /> {t('transactions.payToCard')}
