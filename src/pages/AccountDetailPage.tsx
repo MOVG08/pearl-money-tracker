@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { ArrowLeft, TrendingUp, TrendingDown, Folder } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Legend } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, ACCOUNT_TYPES } from '@/types/database';
 import { CategoryIcon } from '@/lib/categoryIcons';
 import { format } from 'date-fns';
@@ -24,6 +24,9 @@ const AccountDetailPage: React.FC = () => {
   const accountType = ACCOUNT_TYPES.find(at => at.value === account?.type);
 
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | null>(null);
+  const [balanceRange, setBalanceRange] = useState<'month' | 'year' | 'all'>('month');
+  const [barsRange, setBarsRange] = useState<'month' | 'year' | 'all'>('month');
+  const [barsFilter, setBarsFilter] = useState<'both' | 'income' | 'expense'>('both');
 
   const accountTx = useMemo(() =>
     transactions.filter(tx => tx.account_id === id || tx.destination_account_id === id),
@@ -49,21 +52,69 @@ const AccountDetailPage: React.FC = () => {
     }).sort((a, b) => b.value - a.value);
   };
 
-  const balanceData = useMemo(() => {
+  // Compute full cumulative balance series, then slice by selected range.
+  const fullBalanceSeries = useMemo(() => {
     const sorted = [...accountTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     let cumulative = account?.balance ?? 0;
     return sorted.map(tx => {
-      if (tx.type === 'income') {
-        cumulative += tx.amount;
-      } else if (tx.type === 'expense') {
-        cumulative -= tx.amount;
-      } else if (tx.type === 'transfer') {
+      if (tx.type === 'income') cumulative += tx.amount;
+      else if (tx.type === 'expense') cumulative -= tx.amount;
+      else if (tx.type === 'transfer') {
         if (tx.account_id === id) cumulative -= tx.amount;
         if (tx.destination_account_id === id) cumulative += tx.amount;
       }
-      return { date: format(new Date(tx.date), 'dd/MM'), balance: cumulative };
+      return { dateObj: new Date(tx.date), balance: cumulative };
     });
   }, [accountTx, account, id]);
+
+  const balanceData = useMemo(() => {
+    const now = new Date();
+    let from: Date | null = null;
+    if (balanceRange === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
+    else if (balanceRange === 'year') from = new Date(now.getFullYear(), 0, 1);
+    const filtered = from ? fullBalanceSeries.filter(p => p.dateObj >= from!) : fullBalanceSeries;
+    const fmt = balanceRange === 'all' ? 'MM/yy' : balanceRange === 'year' ? 'MMM' : 'dd/MM';
+    return filtered.map(p => ({ date: format(p.dateObj, fmt), balance: p.balance }));
+  }, [fullBalanceSeries, balanceRange]);
+
+  // Bars: aggregate income/expense by week (month view) or by month (year/all views).
+  const barsData = useMemo(() => {
+    const now = new Date();
+    let from: Date | null = null;
+    if (barsRange === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
+    else if (barsRange === 'year') from = new Date(now.getFullYear(), 0, 1);
+
+    const txs = nonTransferTx.filter(tx => {
+      if (!from) return true;
+      return new Date(tx.date) >= from;
+    });
+
+    const buckets: Record<string, { label: string; sortKey: number; income: number; expense: number }> = {};
+
+    txs.forEach(tx => {
+      const d = new Date(tx.date);
+      let key: string;
+      let label: string;
+      let sortKey: number;
+      if (barsRange === 'month') {
+        // Week of month (1-5)
+        const weekNum = Math.ceil(d.getDate() / 7);
+        key = `w${weekNum}`;
+        label = `S${weekNum}`;
+        sortKey = weekNum;
+      } else {
+        // By month
+        key = `${d.getFullYear()}-${d.getMonth()}`;
+        label = format(d, barsRange === 'year' ? 'MMM' : 'MM/yy');
+        sortKey = d.getFullYear() * 12 + d.getMonth();
+      }
+      if (!buckets[key]) buckets[key] = { label, sortKey, income: 0, expense: 0 };
+      if (tx.type === 'income') buckets[key].income += tx.amount;
+      else if (tx.type === 'expense') buckets[key].expense += tx.amount;
+    });
+
+    return Object.values(buckets).sort((a, b) => a.sortKey - b.sortKey);
+  }, [nonTransferTx, barsRange]);
 
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
@@ -172,9 +223,22 @@ const AccountDetailPage: React.FC = () => {
       </div>
 
       {/* Balance over time */}
-      {balanceData.length > 1 && (
+      {fullBalanceSeries.length > 1 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-5">
-          <h2 className="text-base font-medium text-foreground mb-4">{t('dashboard.balanceOverTime')}</h2>
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <h2 className="text-base font-medium text-foreground">{t('dashboard.balanceOverTime')}</h2>
+            <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+              {(['month', 'year', 'all'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setBalanceRange(r)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${balanceRange === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {t(`dashboard.range.${r}`)}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={balanceData}>
@@ -183,6 +247,56 @@ const AccountDetailPage: React.FC = () => {
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }} formatter={(value: number) => [formatCurrency(value), t('dashboard.balance')]} />
                 <Line type="monotone" dataKey="balance" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
               </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Income vs Expenses bars */}
+      {barsData.length > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="glass rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <h2 className="text-base font-medium text-foreground">{t('dashboard.incomeVsExpenses')}</h2>
+            <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+              {(['month', 'year', 'all'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setBarsRange(r)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${barsRange === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {t(`dashboard.range.${r}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex bg-secondary rounded-lg p-0.5 text-xs mb-3 w-fit">
+            {(['both', 'income', 'expense'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setBarsFilter(f)}
+                className={`px-2.5 py-1 rounded-md transition-colors ${barsFilter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+              >
+                {f === 'both' ? t('dashboard.both') : f === 'income' ? t('dashboard.income') : t('dashboard.expenses')}
+              </button>
+            ))}
+          </div>
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barsData}>
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
+                  formatter={(value: number, name) => [formatCurrency(value), name === 'income' ? t('dashboard.income') : t('dashboard.expenses')]}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => v === 'income' ? t('dashboard.income') : t('dashboard.expenses')} />
+                {(barsFilter === 'both' || barsFilter === 'income') && (
+                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                )}
+                {(barsFilter === 'both' || barsFilter === 'expense') && (
+                  <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[6, 6, 0, 0]} />
+                )}
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
