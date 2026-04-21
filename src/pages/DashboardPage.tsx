@@ -98,8 +98,28 @@ const DashboardPage: React.FC = () => {
   }, [periodTx, transactions, accounts, rangeStart, range]);
 
   // Bars: income vs expenses bucketed by day(week), week(month), or month(year/all)
+  // For 'week' we always show 7 days (Mon-Sun) even if some days have no data,
+  // so the visual proportion of the week stays consistent.
   const barsData = useMemo(() => {
     const buckets: Record<string, { label: string; sortKey: number; income: number; expense: number }> = {};
+
+    if (range === 'week' && rangeStart) {
+      const dayLabels = ['EEE'];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(rangeStart);
+        d.setDate(rangeStart.getDate() + i);
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        buckets[key] = { label: format(d, dayLabels[0]), sortKey: d.getTime(), income: 0, expense: 0 };
+      }
+    } else if (range === 'month') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const totalWeeks = Math.ceil(daysInMonth / 7);
+      for (let w = 1; w <= totalWeeks; w++) {
+        buckets[`w${w}`] = { label: `S${w}`, sortKey: w, income: 0, expense: 0 };
+      }
+    }
+
     periodTx.forEach(tx => {
       const d = new Date(tx.date);
       let key: string, label: string, sortKey: number;
@@ -122,7 +142,7 @@ const DashboardPage: React.FC = () => {
       else if (tx.type === 'expense') buckets[key].expense += tx.amount;
     });
     return Object.values(buckets).sort((a, b) => a.sortKey - b.sortKey);
-  }, [periodTx, range]);
+  }, [periodTx, range, rangeStart, now]);
 
   const balanceByAccount = useMemo(() => {
     const items = accounts.map(a => ({
