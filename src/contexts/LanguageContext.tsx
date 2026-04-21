@@ -32,6 +32,7 @@ const translations: Translations = {
   'dashboard.incomeByCategory': { es: 'Ingresos por categoría', en: 'Income by category' },
   'dashboard.expenseByCategory': { es: 'Gastos por categoría', en: 'Expenses by category' },
   'dashboard.balanceOverTime': { es: 'Balance en el tiempo', en: 'Balance over time' },
+  'dashboard.range.week': { es: 'Semana', en: 'Week' },
   'dashboard.range.month': { es: 'Mes', en: 'Month' },
   'dashboard.range.year': { es: 'Año', en: 'Year' },
   'dashboard.range.all': { es: 'Histórico', en: 'All time' },
