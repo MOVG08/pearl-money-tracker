@@ -227,24 +227,11 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           )}
         </div>
       )}
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.destinationAccount')}</label>
-          <div className="flex gap-2 flex-wrap">
-            {destinationAccounts.map(acc => (
-              <button key={acc.id} type="button"
-                onClick={() => setDestinationAccountId(acc.id)}
-                className={`px-3 py-2 rounded-lg text-sm transition-all ${destinationAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
-              >{acc.name}</button>
-            ))}
-          </div>
-          {destinationAccounts.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">{t('transactions.needTwoAccounts')}</p>
-          )}
-        </div>
-      )}
 
       {/* Profile selector (not for transfers) */}
       {!isEdit && type !== 'transfer' && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
               {(() => {
@@ -330,6 +317,8 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
 
       {/* Category (not for transfers) */}
       {!isEdit && type !== 'transfer' && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
           <div className="grid grid-cols-3 gap-2">
             {categories.map(cat => {
               const Icon = getCategoryIcon(cat.id);
