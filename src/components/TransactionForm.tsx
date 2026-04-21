@@ -30,6 +30,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
+  const [name, setName] = useState(editTransaction?.name || '');
   // For card_payment expenses paid from a regular account: which credit card to apply payment to
   const [paymentCardId, setPaymentCardId] = useState(
     editTransaction && (editTransaction.category === 'debt_payment' || editTransaction.category === 'card_payment') && editTransaction.account_id
@@ -110,6 +111,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       credit_account_id: finalCreditAccountId,
       date,
       notes: notes || undefined,
+      name: name.trim() || null,
     };
 
     if (editTransaction) {
