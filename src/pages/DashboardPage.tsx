@@ -398,7 +398,7 @@ const DashboardPage: React.FC = () => {
               >
                 <CategoryIcon category={tx.category} type={tx.type === 'income' ? 'income' : 'expense'} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{cat?.name || tx.category}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{tx.name || cat?.name || tx.category}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
                     {profile && <span>• {profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</span>}
