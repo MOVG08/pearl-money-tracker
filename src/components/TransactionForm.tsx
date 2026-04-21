@@ -120,9 +120,17 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
     onClose();
   };
 
+  const isEdit = !!editTransaction;
+
   return (
     <form onSubmit={handleSubmit} className="elegant-card rounded-2xl p-5 space-y-4">
+      {isEdit && (
+        <p className="text-xs text-muted-foreground bg-secondary/60 border border-border/50 rounded-lg px-3 py-2">
+          {t('transactions.editLimited')}
+        </p>
+      )}
       {/* Type toggle */}
+      {!isEdit && (
       <div>
         <div className="flex gap-2 bg-secondary rounded-xl p-1">
           {(['expense', 'income', 'transfer'] as const).map((t_type) => (
@@ -155,6 +163,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
           <p className="text-xs text-muted-foreground mt-1.5 text-center">{t('transactions.transferHint')}</p>
         )}
       </div>
+      )}
 
       {/* Amount */}
       <Input
