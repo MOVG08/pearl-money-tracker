@@ -165,7 +165,7 @@ const TransactionsPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {isTransfer ? (
+                        {tx.name ? tx.name : isTransfer ? (
                           <span className="flex items-center gap-1">
                             {acc?.name || '?'} <ArrowRight className="w-3 h-3 inline" /> {destAcc?.name || '?'}
                           </span>
