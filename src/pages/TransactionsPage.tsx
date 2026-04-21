@@ -165,7 +165,7 @@ const TransactionsPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {isTransfer ? (
+                        {tx.name ? tx.name : isTransfer ? (
                           <span className="flex items-center gap-1">
                             {acc?.name || '?'} <ArrowRight className="w-3 h-3 inline" /> {destAcc?.name || '?'}
                           </span>
@@ -217,14 +217,14 @@ const TransactionsPage: React.FC = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-medium text-foreground">
-                    {detailIsTransfer ? (
+                    {detailTx.name ? detailTx.name : detailIsTransfer ? (
                       <span className="inline-flex items-center gap-1">
                         {detailAcc?.name || '?'} <ArrowRight className="w-3.5 h-3.5" /> {detailDestAcc?.name || '?'}
                       </span>
                     ) : (detailCat?.name || detailTx.category)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {t(`transactions.${detailTx.type}`)}
+                    {t(`transactions.${detailTx.type}`)}{detailTx.name && !detailIsTransfer && detailCat ? ` · ${detailCat.name}` : ''}
                   </p>
                 </div>
                 <span className={`font-mono text-base font-semibold ${

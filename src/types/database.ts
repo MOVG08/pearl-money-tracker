@@ -50,6 +50,7 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   category: string;
+  name?: string | null;
   notes?: string;
   date: string;
   created_at: string;

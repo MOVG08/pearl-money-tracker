@@ -30,6 +30,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
   const [profileId, setProfileId] = useState(editTransaction?.profile_id || '');
   const [date, setDate] = useState(editTransaction?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(editTransaction?.notes || '');
+  const [name, setName] = useState(editTransaction?.name || '');
   // For card_payment expenses paid from a regular account: which credit card to apply payment to
   const [paymentCardId, setPaymentCardId] = useState(
     editTransaction && (editTransaction.category === 'debt_payment' || editTransaction.category === 'card_payment') && editTransaction.account_id
@@ -110,6 +111,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       credit_account_id: finalCreditAccountId,
       date,
       notes: notes || undefined,
+      name: name.trim() || null,
     };
 
     if (editTransaction) {
@@ -171,6 +173,17 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         value={amount} onChange={(e) => setAmount(e.target.value)}
         className="h-14 text-2xl font-mono text-center bg-secondary border-border/50 rounded-xl" required
       />
+
+      {/* Name (optional) */}
+      <div>
+        <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.name')}</label>
+        <Input
+          type="text" placeholder={t('transactions.namePlaceholder')}
+          value={name} onChange={(e) => setName(e.target.value)}
+          className="h-11 bg-secondary border-border/50 rounded-xl"
+          maxLength={80}
+        />
+      </div>
 
       {/* Source Account (regular accounts + credit accounts for expenses) */}
       <div>

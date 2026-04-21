@@ -26,6 +26,7 @@ const DashboardPage: React.FC = () => {
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | 'balance' | null>(null);
   const [range, setRange] = useState<RangeKey>('month');
   const [barsFilter, setBarsFilter] = useState<'both' | 'income' | 'expense'>('both');
+  const [chartView, setChartView] = useState<'balance' | 'bars'>('balance');
 
   const now = new Date();
 
@@ -97,8 +98,28 @@ const DashboardPage: React.FC = () => {
   }, [periodTx, transactions, accounts, rangeStart, range]);
 
   // Bars: income vs expenses bucketed by day(week), week(month), or month(year/all)
+  // For 'week' we always show 7 days (Mon-Sun) even if some days have no data,
+  // so the visual proportion of the week stays consistent.
   const barsData = useMemo(() => {
     const buckets: Record<string, { label: string; sortKey: number; income: number; expense: number }> = {};
+
+    if (range === 'week' && rangeStart) {
+      const dayLabels = ['EEE'];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(rangeStart);
+        d.setDate(rangeStart.getDate() + i);
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        buckets[key] = { label: format(d, dayLabels[0]), sortKey: d.getTime(), income: 0, expense: 0 };
+      }
+    } else if (range === 'month') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const totalWeeks = Math.ceil(daysInMonth / 7);
+      for (let w = 1; w <= totalWeeks; w++) {
+        buckets[`w${w}`] = { label: `S${w}`, sortKey: w, income: 0, expense: 0 };
+      }
+    }
+
     periodTx.forEach(tx => {
       const d = new Date(tx.date);
       let key: string, label: string, sortKey: number;
@@ -121,7 +142,7 @@ const DashboardPage: React.FC = () => {
       else if (tx.type === 'expense') buckets[key].expense += tx.amount;
     });
     return Object.values(buckets).sort((a, b) => a.sortKey - b.sortKey);
-  }, [periodTx, range]);
+  }, [periodTx, range, rangeStart, now]);
 
   const balanceByAccount = useMemo(() => {
     const items = accounts.map(a => ({
@@ -320,62 +341,78 @@ const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Balance line chart */}
-      {balanceData.length > 1 && (
+      {/* Charts: balance line OR income vs expenses bars (toggle) */}
+      {(balanceData.length > 1 || barsData.length > 0) && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="elegant-card rounded-2xl p-5">
-          <h2 className="section-title mb-4">{t('dashboard.balanceOverTime')}</h2>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={balanceData}>
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
-                  formatter={(value: number) => [formatCurrency(value), t('dashboard.balance')]}
-                />
-                <Line type="monotone" dataKey="balance" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Income vs Expenses bars */}
-      {barsData.length > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="elegant-card rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-            <h2 className="section-title">{t('dashboard.incomeVsExpenses')}</h2>
+            <h2 className="section-title">
+              {chartView === 'balance' ? t('dashboard.balanceOverTime') : t('dashboard.incomeVsExpenses')}
+            </h2>
             <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
-              {(['both', 'income', 'expense'] as const).map(f => (
+              {(['balance', 'bars'] as const).map(v => (
                 <button
-                  key={f}
-                  onClick={() => setBarsFilter(f)}
-                  className={`px-2.5 py-1 rounded-md transition-colors ${barsFilter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  key={v}
+                  onClick={() => setChartView(v)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${chartView === v ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
                 >
-                  {f === 'both' ? t('dashboard.both') : f === 'income' ? t('dashboard.income') : t('dashboard.expenses')}
+                  {v === 'balance' ? t('dashboard.chartBalance') : t('dashboard.chartIncomeVsExpenses')}
                 </button>
               ))}
             </div>
           </div>
-          <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barsData}>
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
-                  formatter={(value: number, name) => [formatCurrency(value), name === 'income' ? t('dashboard.income') : t('dashboard.expenses')]}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => v === 'income' ? t('dashboard.income') : t('dashboard.expenses')} />
-                {(barsFilter === 'both' || barsFilter === 'income') && (
-                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
-                )}
-                {(barsFilter === 'both' || barsFilter === 'expense') && (
-                  <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[6, 6, 0, 0]} />
-                )}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+
+          {chartView === 'balance' && balanceData.length > 1 && (
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={balanceData}>
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
+                    formatter={(value: number) => [formatCurrency(value), t('dashboard.balance')]}
+                  />
+                  <Line type="monotone" dataKey="balance" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {chartView === 'bars' && barsData.length > 0 && (
+            <>
+              <div className="flex justify-end mb-2">
+                <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+                  {(['both', 'income', 'expense'] as const).map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setBarsFilter(f)}
+                      className={`px-2.5 py-1 rounded-md transition-colors ${barsFilter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                    >
+                      {f === 'both' ? t('dashboard.both') : f === 'income' ? t('dashboard.income') : t('dashboard.expenses')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={barsData}>
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
+                      formatter={(value: number, name) => [formatCurrency(value), name === 'income' ? t('dashboard.income') : t('dashboard.expenses')]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => v === 'income' ? t('dashboard.income') : t('dashboard.expenses')} />
+                    {(barsFilter === 'both' || barsFilter === 'income') && (
+                      <Bar dataKey="income" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                    )}
+                    {(barsFilter === 'both' || barsFilter === 'expense') && (
+                      <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[6, 6, 0, 0]} />
+                    )}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
         </motion.div>
       )}
 
@@ -398,7 +435,7 @@ const DashboardPage: React.FC = () => {
               >
                 <CategoryIcon category={tx.category} type={tx.type === 'income' ? 'income' : 'expense'} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{cat?.name || tx.category}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{tx.name || cat?.name || tx.category}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
                     {profile && <span>• {profile.name === '__default_no_profile__' ? t('dashboard.noProfile') : profile.name}</span>}
