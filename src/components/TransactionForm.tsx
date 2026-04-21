@@ -211,7 +211,22 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       </div>
 
       {/* Destination Account (transfer only) */}
-      {type === 'transfer' && (
+      {!isEdit && type === 'transfer' && (
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.destinationAccount')}</label>
+          <div className="flex gap-2 flex-wrap">
+            {destinationAccounts.map(acc => (
+              <button key={acc.id} type="button"
+                onClick={() => setDestinationAccountId(acc.id)}
+                className={`px-3 py-2 rounded-lg text-sm transition-all ${destinationAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+              >{acc.name}</button>
+            ))}
+          </div>
+          {destinationAccounts.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">{t('transactions.needTwoAccounts')}</p>
+          )}
+        </div>
+      )}
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.destinationAccount')}</label>
           <div className="flex gap-2 flex-wrap">
@@ -229,9 +244,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Profile selector (not for transfers) */}
-      {type !== 'transfer' && (
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.profile')}</label>
+      {!isEdit && type !== 'transfer' && (
           {selectedProfile ? (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
               {(() => {
@@ -316,9 +329,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Category (not for transfers) */}
-      {type !== 'transfer' && (
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.category')}</label>
+      {!isEdit && type !== 'transfer' && (
           <div className="grid grid-cols-3 gap-2">
             {categories.map(cat => {
               const Icon = getCategoryIcon(cat.id);
@@ -339,7 +350,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       )}
 
       {/* Card payment target (when paying a credit card from a regular account) */}
-      {type === 'expense' && category === 'debt_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
+      {!isEdit && type === 'expense' && category === 'debt_payment' && source.kind === 'account' && creditAccounts.length > 0 && (
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1">
             <CreditCard className="w-3 h-3" /> {t('transactions.payToCard')}
