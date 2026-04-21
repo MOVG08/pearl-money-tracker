@@ -5,10 +5,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Legend } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/database';
 import { CategoryIcon } from '@/lib/categoryIcons';
 import { format } from 'date-fns';
+
+type RangeKey = 'week' | 'month' | 'year' | 'all';
 
 const CHART_COLORS = ['#3b82f6', '#22c55e', '#ef4444', '#f97316', '#eab308', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
 
@@ -17,26 +19,47 @@ const formatCurrency = (amount: number) =>
 
 const DashboardPage: React.FC = () => {
   const { t, language } = useLanguage();
-  const { monthlyIncome, monthlyExpenses, balance, transactions, profiles, accounts, getAccountBalance } = useData();
+  const { transactions, profiles, accounts, getAccountBalance } = useData();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | 'balance' | null>(null);
+  const [range, setRange] = useState<RangeKey>('month');
+  const [barsFilter, setBarsFilter] = useState<'both' | 'income' | 'expense'>('both');
 
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
 
-  const monthlyTx = useMemo(() =>
+  // Range start: null = all time
+  const rangeStart = useMemo<Date | null>(() => {
+    if (range === 'all') return null;
+    if (range === 'week') {
+      const d = new Date(now);
+      const day = d.getDay();
+      const diff = (day + 6) % 7; // Monday as start of week
+      d.setDate(d.getDate() - diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    if (range === 'month') return new Date(now.getFullYear(), now.getMonth(), 1);
+    return new Date(now.getFullYear(), 0, 1); // year
+  }, [range]);
+
+  // Transactions in current range, excluding transfers (used for cards/categories/history)
+  const periodTx = useMemo(() =>
     transactions.filter(tx => {
-      const d = new Date(tx.date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear && tx.type !== 'transfer';
+      if (tx.type === 'transfer') return false;
+      if (!rangeStart) return true;
+      return new Date(tx.date) >= rangeStart;
     }),
-    [transactions, currentMonth, currentYear]
+    [transactions, rangeStart]
   );
 
+  const periodIncome = useMemo(() => periodTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0), [periodTx]);
+  const periodExpenses = useMemo(() => periodTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0), [periodTx]);
+  const balance = useMemo(() => accounts.reduce((s, a) => s + getAccountBalance(a.id), 0), [accounts, transactions, getAccountBalance]);
+
   const groupByCategory = (type: 'income' | 'expense') => {
-    const txs = monthlyTx.filter(tx => tx.type === type);
+    const txs = periodTx.filter(tx => tx.type === type);
     const categoryList = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
     const grouped: Record<string, number> = {};
     txs.forEach(tx => {
@@ -55,22 +78,50 @@ const DashboardPage: React.FC = () => {
     }).sort((a, b) => b.value - a.value);
   };
 
+  // Cumulative balance line, transfers cancel out at total level so we use income/expense net.
   const balanceData = useMemo(() => {
-    const monthStart = new Date(currentYear, currentMonth, 1);
-    // Starting balance = sum of all account initial balances + all non-transfer tx before this month
     const initialAccountBalance = accounts.reduce((s, a) => s + (a.balance ?? 0), 0);
     const priorDelta = transactions
-      .filter(tx => tx.type !== 'transfer' && new Date(tx.date) < monthStart)
+      .filter(tx => tx.type !== 'transfer' && (!rangeStart || new Date(tx.date) < rangeStart))
       .reduce((s, tx) => s + (tx.type === 'income' ? tx.amount : -tx.amount), 0);
     let cumulative = initialAccountBalance + priorDelta;
-    const sorted = [...monthlyTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const points = [{ date: format(monthStart, 'dd/MM'), balance: cumulative }];
+    const sorted = [...periodTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const fmtStr = range === 'all' ? 'MM/yy' : range === 'year' ? 'MMM' : 'dd/MM';
+    const startLabel = rangeStart ? format(rangeStart, fmtStr) : (sorted[0] ? format(new Date(sorted[0].date), fmtStr) : '');
+    const points = [{ date: startLabel, balance: cumulative }];
     sorted.forEach(tx => {
       cumulative += tx.type === 'income' ? tx.amount : -tx.amount;
-      points.push({ date: format(new Date(tx.date), 'dd/MM'), balance: cumulative });
+      points.push({ date: format(new Date(tx.date), fmtStr), balance: cumulative });
     });
     return points;
-  }, [monthlyTx, transactions, accounts, currentMonth, currentYear]);
+  }, [periodTx, transactions, accounts, rangeStart, range]);
+
+  // Bars: income vs expenses bucketed by day(week), week(month), or month(year/all)
+  const barsData = useMemo(() => {
+    const buckets: Record<string, { label: string; sortKey: number; income: number; expense: number }> = {};
+    periodTx.forEach(tx => {
+      const d = new Date(tx.date);
+      let key: string, label: string, sortKey: number;
+      if (range === 'week') {
+        key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        label = format(d, 'EEE');
+        sortKey = d.getTime();
+      } else if (range === 'month') {
+        const weekNum = Math.ceil(d.getDate() / 7);
+        key = `w${weekNum}`;
+        label = `S${weekNum}`;
+        sortKey = weekNum;
+      } else {
+        key = `${d.getFullYear()}-${d.getMonth()}`;
+        label = format(d, range === 'year' ? 'MMM' : 'MM/yy');
+        sortKey = d.getFullYear() * 12 + d.getMonth();
+      }
+      if (!buckets[key]) buckets[key] = { label, sortKey, income: 0, expense: 0 };
+      if (tx.type === 'income') buckets[key].income += tx.amount;
+      else if (tx.type === 'expense') buckets[key].expense += tx.amount;
+    });
+    return Object.values(buckets).sort((a, b) => a.sortKey - b.sortKey);
+  }, [periodTx, range]);
 
   const balanceByAccount = useMemo(() => {
     const items = accounts.map(a => ({
@@ -87,8 +138,8 @@ const DashboardPage: React.FC = () => {
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const cards = [
-    { key: 'income' as const, label: t('dashboard.income'), value: monthlyIncome, icon: TrendingUp, variant: 'income' },
-    { key: 'expense' as const, label: t('dashboard.expenses'), value: monthlyExpenses, icon: TrendingDown, variant: 'expense' },
+    { key: 'income' as const, label: t('dashboard.income'), value: periodIncome, icon: TrendingUp, variant: 'income' },
+    { key: 'expense' as const, label: t('dashboard.expenses'), value: periodExpenses, icon: TrendingDown, variant: 'expense' },
   ];
 
   const toggleCard = (key: 'income' | 'expense' | 'balance') => {
@@ -99,8 +150,25 @@ const DashboardPage: React.FC = () => {
   const dateLocale = language === 'es' ? 'es-MX' : 'en-US';
   const todayLabel = now.toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' });
 
+  const rangeLabel = range === 'week' ? t('dashboard.range.week') : range === 'month' ? t('dashboard.thisMonth') : range === 'year' ? t('dashboard.range.year') : t('dashboard.range.all');
+
   return (
     <div className="space-y-5 pb-24">
+      {/* Global range selector */}
+      <div className="sticky top-0 z-20 -mx-4 px-4 pt-3 pb-2 bg-background/80 backdrop-blur-md">
+        <div className="flex bg-secondary rounded-xl p-1 text-xs">
+          {(['week', 'month', 'year', 'all'] as const).map(r => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`flex-1 px-3 py-1.5 rounded-lg transition-colors font-medium ${range === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+            >
+              {t(`dashboard.range.${r}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Hero header — date, greeting, summary */}
       <section className="min-h-[55vh] flex flex-col justify-between gap-5 pt-2">
         <div className="space-y-1">
@@ -108,7 +176,7 @@ const DashboardPage: React.FC = () => {
           <h1 className="text-3xl font-semibold text-foreground tracking-tight">
             {t('dashboard.hello')}{userName ? `, ${userName}` : ''}
           </h1>
-          <p className="text-sm text-muted-foreground pt-1">{t('dashboard.thisMonth')} · {t('dashboard.overview')}</p>
+          <p className="text-sm text-muted-foreground pt-1">{rangeLabel} · {t('dashboard.overview')}</p>
         </div>
 
         {/* Summary cards */}
@@ -245,9 +313,9 @@ const DashboardPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
         </div>
         </div>
       </section>
@@ -272,13 +340,52 @@ const DashboardPage: React.FC = () => {
         </motion.div>
       )}
 
+      {/* Income vs Expenses bars */}
+      {barsData.length > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="elegant-card rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+            <h2 className="section-title">{t('dashboard.incomeVsExpenses')}</h2>
+            <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+              {(['both', 'income', 'expense'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setBarsFilter(f)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${barsFilter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {f === 'both' ? t('dashboard.both') : f === 'income' ? t('dashboard.income') : t('dashboard.expenses')}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barsData}>
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
+                  formatter={(value: number, name) => [formatCurrency(value), name === 'income' ? t('dashboard.income') : t('dashboard.expenses')]}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => v === 'income' ? t('dashboard.income') : t('dashboard.expenses')} />
+                {(barsFilter === 'both' || barsFilter === 'income') && (
+                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                )}
+                {(barsFilter === 'both' || barsFilter === 'expense') && (
+                  <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[6, 6, 0, 0]} />
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
+
       {/* History */}
       <div className="space-y-3">
         <h2 className="section-title">{t('dashboard.history')}</h2>
-        {monthlyTx.length === 0 ? (
+        {periodTx.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('transactions.noTransactions')}</p>
         ) : (
-          monthlyTx.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tx, i) => {
+          periodTx.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tx, i) => {
             const cat = allCategories.find(c => c.id === tx.category);
             const profile = profiles.find(p => p.id === tx.profile_id);
             return (
