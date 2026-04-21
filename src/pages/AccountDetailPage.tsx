@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { ArrowLeft, TrendingUp, TrendingDown, Folder } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Legend } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, ACCOUNT_TYPES } from '@/types/database';
 import { CategoryIcon } from '@/lib/categoryIcons';
 import { format } from 'date-fns';
