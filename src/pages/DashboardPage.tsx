@@ -5,10 +5,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Legend } from 'recharts';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/database';
 import { CategoryIcon } from '@/lib/categoryIcons';
 import { format } from 'date-fns';
+
+type RangeKey = 'week' | 'month' | 'year' | 'all';
 
 const CHART_COLORS = ['#3b82f6', '#22c55e', '#ef4444', '#f97316', '#eab308', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
 
