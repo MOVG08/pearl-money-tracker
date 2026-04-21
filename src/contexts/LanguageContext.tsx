@@ -82,6 +82,12 @@ const translations: Translations = {
   'transactions.cardPayment': { es: 'Pago de tarjeta', en: 'Card payment' },
   'transactions.selectCreditAccount': { es: 'Seleccionar tarjeta/crédito', en: 'Select credit account' },
   'transactions.payToCard': { es: 'Aplicar pago a tarjeta', en: 'Apply payment to card' },
+  'transactions.details': { es: 'Detalle del movimiento', en: 'Transaction details' },
+  'transactions.edit': { es: 'Editar', en: 'Edit' },
+  'transactions.delete': { es: 'Eliminar', en: 'Delete' },
+  'transactions.createdAt': { es: 'Creado el', en: 'Created at' },
+  'transactions.updatedAt': { es: 'Actualizado el', en: 'Updated at' },
+  'transactions.editLimited': { es: 'Solo puedes modificar el monto, la cuenta de origen y la fecha.', en: 'You can only edit the amount, source account, and date.' },
   // Accounts
   'accounts.title': { es: 'Cuentas Personales', en: 'Personal Accounts' },
   'accounts.add': { es: 'Nueva cuenta', en: 'New account' },
