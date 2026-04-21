@@ -87,7 +87,11 @@ const translations: Translations = {
   'transactions.delete': { es: 'Eliminar', en: 'Delete' },
   'transactions.createdAt': { es: 'Creado el', en: 'Created at' },
   'transactions.updatedAt': { es: 'Actualizado el', en: 'Updated at' },
-  'transactions.editLimited': { es: 'Solo puedes modificar el monto, la cuenta de origen y la fecha.', en: 'You can only edit the amount, source account, and date.' },
+  'transactions.editLimited': { es: 'Solo puedes modificar el nombre, el monto, la cuenta de origen y la fecha.', en: 'You can only edit the name, amount, source account, and date.' },
+  'transactions.name': { es: 'Nombre', en: 'Name' },
+  'transactions.namePlaceholder': { es: 'Ej. Café con María', en: 'E.g. Coffee with Maria' },
+  'dashboard.chartBalance': { es: 'Balance', en: 'Balance' },
+  'dashboard.chartIncomeVsExpenses': { es: 'Ingresos vs Gastos', en: 'Income vs Expenses' },
   // Accounts
   'accounts.title': { es: 'Cuentas Personales', en: 'Personal Accounts' },
   'accounts.add': { es: 'Nueva cuenta', en: 'New account' },
