@@ -174,6 +174,17 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
         className="h-14 text-2xl font-mono text-center bg-secondary border-border/50 rounded-xl" required
       />
 
+      {/* Name (optional) */}
+      <div>
+        <label className="text-xs text-muted-foreground mb-1.5 block">{t('transactions.name')}</label>
+        <Input
+          type="text" placeholder={t('transactions.namePlaceholder')}
+          value={name} onChange={(e) => setName(e.target.value)}
+          className="h-11 bg-secondary border-border/50 rounded-xl"
+          maxLength={80}
+        />
+      </div>
+
       {/* Source Account (regular accounts + credit accounts for expenses) */}
       <div>
         <label className="text-xs text-muted-foreground mb-1.5 block">
