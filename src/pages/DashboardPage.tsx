@@ -26,6 +26,7 @@ const DashboardPage: React.FC = () => {
   const [expandedCard, setExpandedCard] = useState<'income' | 'expense' | 'balance' | null>(null);
   const [range, setRange] = useState<RangeKey>('month');
   const [barsFilter, setBarsFilter] = useState<'both' | 'income' | 'expense'>('both');
+  const [chartView, setChartView] = useState<'balance' | 'bars'>('balance');
 
   const now = new Date();
 
