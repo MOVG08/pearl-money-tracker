@@ -223,9 +223,22 @@ const AccountDetailPage: React.FC = () => {
       </div>
 
       {/* Balance over time */}
-      {balanceData.length > 1 && (
+      {fullBalanceSeries.length > 1 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-5">
-          <h2 className="text-base font-medium text-foreground mb-4">{t('dashboard.balanceOverTime')}</h2>
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <h2 className="text-base font-medium text-foreground">{t('dashboard.balanceOverTime')}</h2>
+            <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+              {(['month', 'year', 'all'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setBalanceRange(r)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${balanceRange === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {t(`dashboard.range.${r}`)}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={balanceData}>
@@ -234,6 +247,56 @@ const AccountDetailPage: React.FC = () => {
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }} formatter={(value: number) => [formatCurrency(value), t('dashboard.balance')]} />
                 <Line type="monotone" dataKey="balance" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
               </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Income vs Expenses bars */}
+      {barsData.length > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="glass rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <h2 className="text-base font-medium text-foreground">{t('dashboard.incomeVsExpenses')}</h2>
+            <div className="flex bg-secondary rounded-lg p-0.5 text-xs">
+              {(['month', 'year', 'all'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setBarsRange(r)}
+                  className={`px-2.5 py-1 rounded-md transition-colors ${barsRange === r ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  {t(`dashboard.range.${r}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex bg-secondary rounded-lg p-0.5 text-xs mb-3 w-fit">
+            {(['both', 'income', 'expense'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setBarsFilter(f)}
+                className={`px-2.5 py-1 rounded-md transition-colors ${barsFilter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+              >
+                {f === 'both' ? t('dashboard.both') : f === 'income' ? t('dashboard.income') : t('dashboard.expenses')}
+              </button>
+            ))}
+          </div>
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barsData}>
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: 12 }}
+                  formatter={(value: number, name) => [formatCurrency(value), name === 'income' ? t('dashboard.income') : t('dashboard.expenses')]}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => v === 'income' ? t('dashboard.income') : t('dashboard.expenses')} />
+                {(barsFilter === 'both' || barsFilter === 'income') && (
+                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                )}
+                {(barsFilter === 'both' || barsFilter === 'expense') && (
+                  <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[6, 6, 0, 0]} />
+                )}
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
