@@ -52,21 +52,69 @@ const AccountDetailPage: React.FC = () => {
     }).sort((a, b) => b.value - a.value);
   };
 
-  const balanceData = useMemo(() => {
+  // Compute full cumulative balance series, then slice by selected range.
+  const fullBalanceSeries = useMemo(() => {
     const sorted = [...accountTx].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     let cumulative = account?.balance ?? 0;
     return sorted.map(tx => {
-      if (tx.type === 'income') {
-        cumulative += tx.amount;
-      } else if (tx.type === 'expense') {
-        cumulative -= tx.amount;
-      } else if (tx.type === 'transfer') {
+      if (tx.type === 'income') cumulative += tx.amount;
+      else if (tx.type === 'expense') cumulative -= tx.amount;
+      else if (tx.type === 'transfer') {
         if (tx.account_id === id) cumulative -= tx.amount;
         if (tx.destination_account_id === id) cumulative += tx.amount;
       }
-      return { date: format(new Date(tx.date), 'dd/MM'), balance: cumulative };
+      return { dateObj: new Date(tx.date), balance: cumulative };
     });
   }, [accountTx, account, id]);
+
+  const balanceData = useMemo(() => {
+    const now = new Date();
+    let from: Date | null = null;
+    if (balanceRange === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
+    else if (balanceRange === 'year') from = new Date(now.getFullYear(), 0, 1);
+    const filtered = from ? fullBalanceSeries.filter(p => p.dateObj >= from!) : fullBalanceSeries;
+    const fmt = balanceRange === 'all' ? 'MM/yy' : balanceRange === 'year' ? 'MMM' : 'dd/MM';
+    return filtered.map(p => ({ date: format(p.dateObj, fmt), balance: p.balance }));
+  }, [fullBalanceSeries, balanceRange]);
+
+  // Bars: aggregate income/expense by week (month view) or by month (year/all views).
+  const barsData = useMemo(() => {
+    const now = new Date();
+    let from: Date | null = null;
+    if (barsRange === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
+    else if (barsRange === 'year') from = new Date(now.getFullYear(), 0, 1);
+
+    const txs = nonTransferTx.filter(tx => {
+      if (!from) return true;
+      return new Date(tx.date) >= from;
+    });
+
+    const buckets: Record<string, { label: string; sortKey: number; income: number; expense: number }> = {};
+
+    txs.forEach(tx => {
+      const d = new Date(tx.date);
+      let key: string;
+      let label: string;
+      let sortKey: number;
+      if (barsRange === 'month') {
+        // Week of month (1-5)
+        const weekNum = Math.ceil(d.getDate() / 7);
+        key = `w${weekNum}`;
+        label = `S${weekNum}`;
+        sortKey = weekNum;
+      } else {
+        // By month
+        key = `${d.getFullYear()}-${d.getMonth()}`;
+        label = format(d, barsRange === 'year' ? 'MMM' : 'MM/yy');
+        sortKey = d.getFullYear() * 12 + d.getMonth();
+      }
+      if (!buckets[key]) buckets[key] = { label, sortKey, income: 0, expense: 0 };
+      if (tx.type === 'income') buckets[key].income += tx.amount;
+      else if (tx.type === 'expense') buckets[key].expense += tx.amount;
+    });
+
+    return Object.values(buckets).sort((a, b) => a.sortKey - b.sortKey);
+  }, [nonTransferTx, barsRange]);
 
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
