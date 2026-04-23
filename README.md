@@ -1,10 +1,10 @@
-# 💸 Money Tracker
+# Money Tracker
 
 A modern financial tracking application designed for individuals, freelancers, and small businesses to manage income, expenses, and financial insights in a simple and scalable way.
 
 ---
 
-## 🚀 Overview
+## Overview
 
 Pearl is a mobile-first finance tracker that allows users to:
 
@@ -13,13 +13,13 @@ Pearl is a mobile-first finance tracker that allows users to:
 - Associate transactions with **profiles** (clients, vendors, people)
 - Visualize financial data through **dashboards and charts**
 - Prepare for future features like:
-  - 📷 OCR (handwritten & receipts)
-  - 💬 WhatsApp chatbot integration
-  - 🧠 AI-powered insights
+  -  OCR (handwritten & receipts)
+  -  WhatsApp chatbot integration
+  -  AI-powered insights
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
 - **Frontend**: Lovable (AI-generated UI)
 - **Backend**: Supabase (PostgreSQL + Auth)
@@ -32,7 +32,7 @@ Pearl is a mobile-first finance tracker that allows users to:
 
 ---
 
-## 🗄️ Database Schema
+##  Database Schema
 
 ### Accounts
 Represents where money is stored.
@@ -76,7 +76,7 @@ Represents movements of money.
 
 ---
 
-## 🔁 Transaction Logic
+##  Transaction Logic
 
 - **Income** → money coming in  
 - **Expense** → money going out  
@@ -84,7 +84,7 @@ Represents movements of money.
 
 ---
 
-## 📊 Key Metrics
+##  Key Metrics
 
 - **Balance** = Income − Expenses  
 - **Cash Flow Over Time**
@@ -92,18 +92,9 @@ Represents movements of money.
 
 ---
 
-## 🔐 Security
+##  Security
 
 - Row Level Security (RLS) enabled
 - Each user can only access their own data
 - Supabase Auth handles authentication
 
----
-
-## ⚙️ Setup
-
-### 1. Clone repo
-
-```bash
-git clone https://github.com/MOVG08/pearl-money-tracker.git
-cd pearl-money-tracker
