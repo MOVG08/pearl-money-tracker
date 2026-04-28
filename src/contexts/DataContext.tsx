@@ -281,7 +281,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const ca = creditAccounts.find(c => c.id === creditAccountId);
     const limit = ca?.credit_limit ?? 0;
     const creditTxs = transactions.filter(t => t.credit_account_id === creditAccountId);
-    const charges = creditTxs.filter(t => !isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
+    const charges = creditTxs.filter(t => t.type === 'expense' && !isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
     const payments = creditTxs.filter(t => isDebtPayment(t.category)).reduce((s, t) => s + t.amount, 0);
     const totalSpent = charges - payments;
 
@@ -289,6 +289,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const toIso = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
+    const addDaysIso = (iso: string, days: number) => {
+      const d = new Date(`${iso}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + days);
+      return d.toISOString().slice(0, 10);
+    };
     const lastDayOfMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
 
     let cycleStartIso: string;
@@ -305,14 +310,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const prevY = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
         const prevM = (now.getMonth() + 11) % 12;
         const prevCutDay = Math.min(cutDay, lastDayOfMonth(prevY, prevM));
-        cycleStartIso = toIso(prevY, prevM, prevCutDay + 1);
+        cycleStartIso = addDaysIso(toIso(prevY, prevM, prevCutDay), 1);
         cycleEndIso = thisMonthCutIso;
       } else {
         // Cycle: (this month cut + 1) ... (next month cut)
         const nextY = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
         const nextM = (now.getMonth() + 1) % 12;
         const nextCutDay = Math.min(cutDay, lastDayOfMonth(nextY, nextM));
-        cycleStartIso = toIso(now.getFullYear(), now.getMonth(), thisMonthCutDay + 1);
+        cycleStartIso = addDaysIso(thisMonthCutIso, 1);
         cycleEndIso = toIso(nextY, nextM, nextCutDay);
       }
     } else {
@@ -321,7 +326,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const cycleSpent = creditTxs.filter(t => {
-      if (isDebtPayment(t.category)) return false;
+      if (t.type !== 'expense' || isDebtPayment(t.category)) return false;
       const d = (t.date || '').slice(0, 10);
       return d >= cycleStartIso && d <= cycleEndIso;
     }).reduce((s, t) => s + t.amount, 0);
