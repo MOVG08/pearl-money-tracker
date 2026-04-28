@@ -111,8 +111,10 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       credit_account_id: finalCreditAccountId,
       date,
       notes: notes || undefined,
-      name: name.trim() || null,
     };
+
+    const trimmedName = name.trim();
+    if (trimmedName) txData.name = trimmedName;
 
     if (editTransaction) {
       updateTransaction(editTransaction.id, txData);
