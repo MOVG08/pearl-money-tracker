@@ -188,7 +188,7 @@ const TransactionForm: React.FC<Props> = ({ onClose, editTransaction }) => {
       {/* Source Account (regular accounts + credit accounts for expenses) */}
       <div>
         <label className="text-xs text-muted-foreground mb-1.5 block">
-          {t('transactions.sourceAccount')}
+          {type === 'income' ? t('transactions.destinationAccount') : t('transactions.sourceAccount')}
         </label>
         <div className="space-y-2">
           <div>
