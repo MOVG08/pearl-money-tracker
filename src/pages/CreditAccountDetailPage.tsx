@@ -166,7 +166,7 @@ const CreditAccountDetailPage: React.FC = () => {
                   type={isPayment ? 'payment' : 'expense'}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{isPayment ? t('transactions.cardPayment') : cat?.name || tx.category}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{tx.name || (isPayment ? t('transactions.cardPayment') : cat?.name || tx.category)}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{new Date(tx.date).toLocaleDateString('es-MX')}</span>
                     {acc && <span>• {acc.name}</span>}
